@@ -13,8 +13,90 @@
     tools:context="com.mark.qpsaralmclock.gpsaralmclock.MainActivity"
     tools:showIn="@layout/activity_main">
 
+    <android.support.v7.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="280dp"
+        android:layout_marginTop="2dp"
+        android:id="@+id/cardView"
+        android:elevation="1dp"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" >
+
+        <com.google.android.gms.maps.MapView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_margin="5dp"
+            android:id="@+id/mapView" />
+
+    </android.support.v7.widget.CardView>
+
+
+    <android.support.v7.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:id="@+id/cardView2"
+        android:layout_below="@+id/cardView"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="16dp" >
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:gravity="center"
+            android:id="@+id/lilayout"
+            android:background="#e57373"
+            android:layout_height="match_parent">
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                android:layout_gravity="bottom"
+                app:srcCompat="@drawable/mr_ic_play_light"
+                android:id="@+id/imgstart"
+                android:layout_weight="0.5" />
+
+            <TextView
+                android:text="Дом"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/tvname"
+                android:textSize="18sp"
+                android:layout_weight="1" />
+
+            <TextView
+                android:text="Выберите точку"
+                android:textSize="20sp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/tvkm"
+                android:layout_weight="1" />
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                app:srcCompat="@drawable/places_ic_clear"
+                android:id="@+id/imgdelete"
+                android:layout_weight="0.5"/>
+        </LinearLayout>
+
+    </android.support.v7.widget.CardView>
+
     <TextView
+        android:text="0"
+        android:textSize="20sp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Hello World!" />
+        android:id="@+id/tvdebug"
+        android:layout_marginLeft="33dp"
+        android:layout_marginStart="33dp"
+        android:layout_marginTop="19dp"
+        android:layout_below="@+id/cardView2"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
+
 </RelativeLayout>
