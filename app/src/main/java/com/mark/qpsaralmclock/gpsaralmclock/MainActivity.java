@@ -4,18 +4,24 @@ package com.mark.qpsaralmclock.gpsaralmclock;
 import android.Manifest;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.ContentValues;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.BaseColumns;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
@@ -39,6 +45,9 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import java.util.ArrayList;
+import java.util.Random;
+
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener, View.OnClickListener{
 
@@ -58,10 +67,17 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     int debug = 0;
     LocationRequest mLocationRequest;
     LinearLayout linLayout;
+    RecyclerView rv;
+
     Service myservice;
     public final static String PARAM_PINTENT = "pendingIntent";
     public final static String PARAM_RESULT = "result";
     public final static String LAT_LONG = "ll";
+
+    ArrayList<GifItem> alarmItem = new ArrayList<GifItem>();
+    DatabaseHelper dbHelper;
+    SQLiteDatabase db;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,16 +86,30 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        dbHelper = new DatabaseHelper(this);
+        db = dbHelper.getWritableDatabase();
+
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
-            }
-        });
 
-    //    createLocationRequest();
+                ContentValues values = new ContentValues();
+                Random r = new Random();
+                r.nextInt(100);
+                // Задайте значения для каждого столбца
+                values.put(DatabaseHelper.NAME_COLUMN, "Name " + r.nextInt(100));
+                values.put(DatabaseHelper.LATITUDE_COLUMN, "4954553443");
+                values.put(DatabaseHelper.LONGITUDE_COLUMN, "6987715365");
+        // Вставляем данные в таблицу
+        db.insert("locations", null, values);
+                readDatabase();
+    }
+});
+
+        //    createLocationRequest();
         mapView = (MapView) findViewById(R.id.mapView);
         mapView.getMapAsync(this);
         mapView.onCreate(savedInstanceState);
@@ -94,8 +124,21 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         linLayout = (LinearLayout) findViewById(R.id.lilayout);
 
-        //  mMap.addMarker(marker);
+        rv = (RecyclerView) findViewById(R.id.rv);
 
+
+       // alarmItem.add(new GifItem("Имя 1",  54987, 687468));
+      //  alarmItem.add(new GifItem("Работа",  98857, 45368));
+        Log.d(LOG_TAG, "размерл списка: " + alarmItem.size());
+        RvAdapter adapter = new RvAdapter(alarmItem);
+        Log.d(LOG_TAG, "размерл списка2: " + alarmItem.size());
+        rv.setAdapter(adapter);
+        Log.d(LOG_TAG, "размерл списка23 " + alarmItem.size());
+//        rv.notify();
+        //  mMap.addMarker(marker);
+        LinearLayoutManager llm = new LinearLayoutManager(this);
+        rv.setLayoutManager(llm);
+        readDatabase();
 
         if (mGoogleApiClient == null) {
             // ATTENTION: This "addApi(AppIndex.API)"was auto-generated to implement the App Indexing API.
@@ -109,6 +152,27 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         //  Intent intent = new Intent(this, MapsActivity.class);
         //  startActivity(intent);
+    }
+
+    private void readDatabase() {
+        Cursor cursor = db.query("locations", new String[] {DatabaseHelper.NAME_COLUMN,
+                        DatabaseHelper.LATITUDE_COLUMN, DatabaseHelper.LONGITUDE_COLUMN},
+                null, null,
+                null, null, null) ;
+        alarmItem.clear();
+        while (cursor.moveToNext()) {
+            int id = 2;
+            String Name = cursor.getString(cursor.getColumnIndex(DatabaseHelper.NAME_COLUMN));
+            float latitude = cursor.getFloat(cursor.getColumnIndex(DatabaseHelper.LATITUDE_COLUMN));
+            float longitude = cursor.getFloat(cursor.getColumnIndex(DatabaseHelper.LONGITUDE_COLUMN));
+            alarmItem.add(new GifItem(Name,  latitude, longitude));
+            Log.d(LOG_TAG, "id=" + id +" Name =" + Name + " longitude =" + longitude + " latitude =" + latitude);
+        }
+        // не забываем закрывать курсор
+        cursor.close();
+        RvAdapter adapter = new RvAdapter(alarmItem);
+        rv.setAdapter(adapter);
+
     }
 /*
     protected void createLocationRequest() {
