@@ -6,7 +6,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.webkit.WebView;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -18,6 +17,7 @@ public class RvAdapter extends RecyclerView.Adapter<RvAdapter.ViewHolder> {
 
     ArrayList<GifItem> objects;
     final static String LOG_TAG = "myLogss";
+    MainActivity main;
 
     RvAdapter(ArrayList<GifItem> gifs) {
         objects = gifs;
@@ -26,6 +26,7 @@ public class RvAdapter extends RecyclerView.Adapter<RvAdapter.ViewHolder> {
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.item, parent, false);
         ViewHolder vh = new ViewHolder(v);
+        main = (MainActivity) parent.getContext();
 
         Log.d(LOG_TAG, "Адаптер onCreateViewHolder ");
         return vh;
@@ -34,13 +35,24 @@ public class RvAdapter extends RecyclerView.Adapter<RvAdapter.ViewHolder> {
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
      //   holder.currentItem = items.get(position);
-
         GifItem currentGif = objects.get(position);
-        String name = currentGif.GetName();
 
+        String name = currentGif.getName();
+        Log.d(LOG_TAG, "Получили расстоние " + currentGif.getDistance());
         holder.tvname.setText(name);
+        holder.tvKm.setText(main.convertDistance(currentGif.getDistance()));
 
     }
+/*
+    public void upDatedistance() {
+
+
+
+        holder.tvKm.setText(main.convertDistance(currentGif.getDistance()));
+
+    }
+*/
+
 
     @Override
     public int getItemCount() {
@@ -50,6 +62,7 @@ public class RvAdapter extends RecyclerView.Adapter<RvAdapter.ViewHolder> {
     public class ViewHolder extends  RecyclerView.ViewHolder {
 
         TextView tvname;
+        TextView tvKm;
         CardView cv;
         RelativeLayout rl;
 
@@ -60,15 +73,21 @@ public class RvAdapter extends RecyclerView.Adapter<RvAdapter.ViewHolder> {
             super(itemView);
             Log.d(LOG_TAG, "ViewHolder");
 
-            cv = (CardView) itemView.findViewById(R.id.cardView2);
+            cv = (CardView) itemView.findViewById(R.id.cardView);
 
             tvname = (TextView) itemView.findViewById(R.id.tvname);
+            tvKm = (TextView) itemView.findViewById(R.id.tvkm);
 
             imgdelete = (ImageView) itemView.findViewById(R.id.imgdelete);
+
             imgdelete.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    Log.d(LOG_TAG, "Кликнули на крестик");
+                    Log.d(LOG_TAG, "Кликнули на крестик: " + getAdapterPosition());
+                    Log.d(LOG_TAG, "имя: " + objects.get(getAdapterPosition()).getName());
+
+                    main.deleteItem(objects.get(getAdapterPosition()).getId(), getAdapterPosition());
+
 
                 }
             });

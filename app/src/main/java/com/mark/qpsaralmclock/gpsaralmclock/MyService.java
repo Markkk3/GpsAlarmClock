@@ -35,10 +35,11 @@ public class MyService extends Service implements LocationListener, GoogleApiCli
     LocationRequest mLocationRequest;
     PendingIntent pi;
     LatLng markerLoc =  null;
-    int t=0;
+    int t=5;
     Notification.Builder builder;
     Notification notification;
     private NotificationManagerCompat notificationManager;
+    int MODE=0;
 
 
     public MyService() {
@@ -59,12 +60,8 @@ public class MyService extends Service implements LocationListener, GoogleApiCli
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d(LOG_TAG, "onStartCommand");
-
-
-        pi = intent.getParcelableExtra(MainActivity.PARAM_PINTENT);
-        markerLoc = intent.getParcelableExtra(MainActivity.LAT_LONG);
-        Log.d(LOG_TAG, "получили маркер: " +markerLoc.latitude);
-
+       // MODE = intent.getIntExtra(MainActivity.MODE_SERVICE, 0);
+        Log.d(LOG_TAG, "Mode = " + MODE);
         if (mGoogleApiClient == null) {
             // ATTENTION: This "addApi(AppIndex.API)"was auto-generated to implement the App Indexing API.
             // See https://g.co/AppIndexing/AndroidStudio for more information.
@@ -76,19 +73,29 @@ public class MyService extends Service implements LocationListener, GoogleApiCli
         }
         mGoogleApiClient.connect();
         createLocationRequest();
-        someTask();
+        pi = intent.getParcelableExtra(MainActivity.PARAM_PINTENT);
 
-        builder = new Notification.Builder(getApplicationContext());
+        switch (MODE) {
+            case MainActivity.MODE_MY_LOCATION:
+                break;
+            case  MainActivity.MODE_RUN_ALARMCLOCK:
+
+                markerLoc = intent.getParcelableExtra(MainActivity.LAT_LONG);
+                Log.d(LOG_TAG, "получили маркер: " +markerLoc.latitude);
+                builder = new Notification.Builder(getApplicationContext());
 // оставим только самое необходимое
-        builder.setContentIntent(pi)
-                .setSmallIcon(R.drawable.ic_setting_light)
-                .setContentTitle("0 Km")
-                .setContentText("Расстояние до точки"); // Текст уведомления
+                builder.setContentIntent(pi)
+                        .setSmallIcon(R.drawable.ic_setting_light)
+                        .setContentTitle("0 Km")
+                        .setContentText("Расстояние до точки"); // Текст уведомления
 
-        notification = builder.build();
-        
-        notificationManager = NotificationManagerCompat.from(this);
-        notificationManager.notify(101, notification);
+                notification = builder.build();
+
+                notificationManager = NotificationManagerCompat.from(this);
+                notificationManager.notify(101, notification);
+
+                break;
+        }
 
 
       //  startForeground(1, n);
@@ -110,7 +117,7 @@ public class MyService extends Service implements LocationListener, GoogleApiCli
     protected void createLocationRequest() {
         Log.d(LOG_TAG, "createLocationRequest()");
         mLocationRequest = new LocationRequest();
-        mLocationRequest.setInterval(4000);
+        mLocationRequest.setInterval(6000);
         mLocationRequest.setFastestInterval(2000);
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
        // startLocationUpdates();
@@ -139,25 +146,37 @@ public class MyService extends Service implements LocationListener, GoogleApiCli
     @Override
     public void onLocationChanged(Location location) {
         Log.d(LOG_TAG, "onLocationChanged");
+        Intent intent = new Intent().putExtra(MainActivity.MY_LOCATION, location).putExtra(MainActivity.PARAM_RESULT, 1);
 
-        float[] res = new float[3];
-        Location.distanceBetween(markerLoc.latitude, markerLoc.longitude, location.getLatitude(), location.getLongitude(), res);
-        Log.d(LOG_TAG, "Расстояние в серсисе: " + res[0]);
-        Intent intent = new Intent().putExtra(MainActivity.PARAM_RESULT, res[0]);
-        builder.setContentTitle(convertDistance(res[0]));
+        switch (MODE) {
+            case MainActivity.MODE_MY_LOCATION:
 
-        notification = builder.build();
+                break;
+            case MainActivity.MODE_RUN_ALARMCLOCK:
+                float[] res = new float[3];
+                Location.distanceBetween(markerLoc.latitude, markerLoc.longitude, location.getLatitude(), location.getLongitude(), res);
+                Log.d(LOG_TAG, "Расстояние в серсисе: " + res[0]);
+                intent = new Intent().putExtra(MainActivity.PARAM_RESULT, res[0]).putExtra(MainActivity.MY_LOCATION, location);
 
-        notificationManager = NotificationManagerCompat.from(this);
+                builder.setContentTitle(convertDistance(res[0]));
 
-        notificationManager.notify(101, notification);
-        t++;
+                notification = builder.build();
+
+                notificationManager = NotificationManagerCompat.from(this);
+
+                notificationManager.notify(101, notification);
+
+                break;
+        }
+
         try {
             pi.send(MyService.this, t, intent);
 
         } catch (PendingIntent.CanceledException e) {
             e.printStackTrace();
         }
+
+
     }
 
     @Override

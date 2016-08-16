@@ -11,6 +11,7 @@ import android.provider.BaseColumns;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
     // названия столбцов
+    public static final String ID = "id";
     public static final String NAME_COLUMN = "name";
     public static final String LATITUDE_COLUMN = "lat";
     public static final String LONGITUDE_COLUMN = "long";
@@ -19,14 +20,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     // версия базы данных
     private static final int DATABASE_VERSION = 1;
     // имя таблицы
-    private static final String DATABASE_TABLE = "locations";
+    public static final String DATABASE_TABLE = "locations";
     private static final String DATABASE_CREATE_SCRIPT = "create table "
-            + DATABASE_TABLE + " (" + BaseColumns._ID
+            + DATABASE_TABLE + " (" + ID
             + " integer primary key autoincrement, " + NAME_COLUMN
             + " text not null, " + LATITUDE_COLUMN + " float, " + LONGITUDE_COLUMN
             + " float);";
 
-
+    //+ BaseColumns._ID
+  //  + " integer primary key autoincrement, "
 
     public DatabaseHelper(Context context, String name, SQLiteDatabase.CursorFactory factory, int version) {
         super(context, name, factory, version);

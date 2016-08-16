@@ -13,13 +13,13 @@ import android.graphics.Color;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.BaseColumns;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.CardView;
+import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
@@ -29,6 +29,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.google.android.gms.appindexing.Action;
@@ -48,35 +49,51 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import java.util.ArrayList;
 import java.util.Random;
 
+import static android.R.attr.id;
+
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener, View.OnClickListener{
+        GoogleApiClient.OnConnectionFailedListener, View.OnClickListener, NewPointDialog.OnCompleteListener{
+
+    public final static int MODE_MY_LOCATION = 0;
+    public final static int MODE_RUN_ALARMCLOCK= 1;
+    public final static String MODE_SERVICE = "mode";
+    public final static String PARAM_PINTENT = "pendingIntent";
+    public final static String PARAM_RESULT = "result";
+    public final static String LAT_LONG = "ll";
+    public final static String MY_LOCATION = "myloc";
+
 
     MapView mapView;
     private GoogleMap mMap;
     GoogleApiClient mGoogleApiClient;
     final String LOG_TAG = "myLogs";
-    LatLng myLoc;
+    Location myLoc;
     LatLng markerLoc =  null;
     TextView tvName;
-    TextView tvkm;
-    ImageView imgstart;
-    ImageView imgdelete;
+   // TextView tvkm;
+  //  ImageView imgstart;
+  //  ImageView imgdelete;
     Boolean start_stop = true;
     MarkerOptions marker;
     TextView tvdebug;
+    Boolean choisePoint = false;
+
+    CardView cardview;
     int debug = 0;
     LocationRequest mLocationRequest;
     LinearLayout linLayout;
     RecyclerView rv;
 
+    String currentNamePoint="";
+
     Service myservice;
-    public final static String PARAM_PINTENT = "pendingIntent";
-    public final static String PARAM_RESULT = "result";
-    public final static String LAT_LONG = "ll";
+
 
     ArrayList<GifItem> alarmItem = new ArrayList<GifItem>();
     DatabaseHelper dbHelper;
     SQLiteDatabase db;
+    RvAdapter adapter;
+
 
 
     @Override
@@ -88,14 +105,19 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         dbHelper = new DatabaseHelper(this);
         db = dbHelper.getWritableDatabase();
+       // int clearCount = db.delete(DatabaseHelper.DATABASE_TABLE, null, null);
+      //  Log.d(LOG_TAG, "deleted rows count = " + clearCount);
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+             //   Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+              //          .setAction("Action", null).show();
 
+                new NewPointDialog().show(getFragmentManager(),
+                        "login");
+/*
                 ContentValues values = new ContentValues();
                 Random r = new Random();
                 r.nextInt(100);
@@ -106,6 +128,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         // Вставляем данные в таблицу
         db.insert("locations", null, values);
                 readDatabase();
+                */
     }
 });
 
@@ -114,31 +137,31 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mapView.getMapAsync(this);
         mapView.onCreate(savedInstanceState);
 
-        tvName = (TextView) findViewById(R.id.tvname);
-        tvkm = (TextView) findViewById(R.id.tvkm);
-        tvdebug = (TextView) findViewById(R.id.tvdebug);
+      //  tvName = (TextView) findViewById(R.id.tvname);
+      //  tvkm = (TextView) findViewById(R.id.tvkm);
+      //  tvdebug = (TextView) findViewById(R.id.tvdebug);
 
-        imgstart = (ImageView) findViewById(R.id.imgstart);
-        imgdelete = (ImageView) findViewById(R.id.imgdelete);
-        imgstart.setOnClickListener(this);
+      //  imgstart = (ImageView) findViewById(R.id.imgstart);
+     //   imgdelete = (ImageView) findViewById(R.id.imgdelete);
+     //   imgstart.setOnClickListener(this);
 
         linLayout = (LinearLayout) findViewById(R.id.lilayout);
+        cardview = (CardView) findViewById(R.id.cardView);
+
 
         rv = (RecyclerView) findViewById(R.id.rv);
 
 
-       // alarmItem.add(new GifItem("Имя 1",  54987, 687468));
-      //  alarmItem.add(new GifItem("Работа",  98857, 45368));
-        Log.d(LOG_TAG, "размерл списка: " + alarmItem.size());
-        RvAdapter adapter = new RvAdapter(alarmItem);
-        Log.d(LOG_TAG, "размерл списка2: " + alarmItem.size());
+        adapter = new RvAdapter(alarmItem);
         rv.setAdapter(adapter);
-        Log.d(LOG_TAG, "размерл списка23 " + alarmItem.size());
 //        rv.notify();
         //  mMap.addMarker(marker);
         LinearLayoutManager llm = new LinearLayoutManager(this);
         rv.setLayoutManager(llm);
-        readDatabase();
+
+        RecyclerView.ItemAnimator itemAnimator = new DefaultItemAnimator();
+        rv.setItemAnimator(itemAnimator);
+
 
         if (mGoogleApiClient == null) {
             // ATTENTION: This "addApi(AppIndex.API)"was auto-generated to implement the App Indexing API.
@@ -150,30 +173,88 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     .addApi(AppIndex.API).build();
         }
 
+        Intent i = new Intent();
+        PendingIntent pi = createPendingResult(1, i, 0);
+        startService(new Intent(this, MyService.class).putExtra(PARAM_PINTENT, pi).putExtra(MODE_SERVICE, MODE_MY_LOCATION));
+        readDatabase();
         //  Intent intent = new Intent(this, MapsActivity.class);
         //  startActivity(intent);
     }
 
     private void readDatabase() {
-        Cursor cursor = db.query("locations", new String[] {DatabaseHelper.NAME_COLUMN,
+        Cursor cursor = db.query("locations", new String[] {DatabaseHelper.ID,DatabaseHelper.NAME_COLUMN,
                         DatabaseHelper.LATITUDE_COLUMN, DatabaseHelper.LONGITUDE_COLUMN},
                 null, null,
                 null, null, null) ;
         alarmItem.clear();
+
+
         while (cursor.moveToNext()) {
-            int id = 2;
+            int id = cursor.getInt(cursor.getColumnIndex(DatabaseHelper.ID));
             String Name = cursor.getString(cursor.getColumnIndex(DatabaseHelper.NAME_COLUMN));
             float latitude = cursor.getFloat(cursor.getColumnIndex(DatabaseHelper.LATITUDE_COLUMN));
             float longitude = cursor.getFloat(cursor.getColumnIndex(DatabaseHelper.LONGITUDE_COLUMN));
-            alarmItem.add(new GifItem(Name,  latitude, longitude));
+            alarmItem.add(new GifItem(Name,  latitude, longitude, id));
+            /*
+            LatLng latLng = new LatLng(latitude, longitude);
+            marker = new MarkerOptions().position(latLng).title(Name);
+
+            if (mMap!=null) {
+                mMap.addMarker(marker);
+            }
+*/
+
             Log.d(LOG_TAG, "id=" + id +" Name =" + Name + " longitude =" + longitude + " latitude =" + latitude);
         }
         // не забываем закрывать курсор
         cursor.close();
-        RvAdapter adapter = new RvAdapter(alarmItem);
-        rv.setAdapter(adapter);
+      //  RvAdapter adapter = new RvAdapter(alarmItem);
+
+     //   rv.setAdapter(adapter);
+
+        adapter.notifyDataSetChanged();
+
+
 
     }
+
+    public void deleteItem(int id, int i) {
+     //   db = dbHelper.getWritableDatabase();
+        Log.d(LOG_TAG, "deleteItem i =" + i);
+
+        int delCount = db.delete(DatabaseHelper.DATABASE_TABLE, "id = " + id, null);
+        Log.d(LOG_TAG, "deleted rows count = " + delCount);
+        alarmItem.remove(i);
+        adapter.notifyDataSetChanged();
+        updateMap();
+
+       // readDatabase();
+       //alarmItem.remove();
+
+    //    dbHelper.close();
+    }
+    @Override
+    public void onComplete(String name) {
+        Log.d(LOG_TAG, "получили =" + name);
+        currentNamePoint = name;
+        choisePoint = true;
+       // newPoint(name);
+
+    }
+
+    public void newPoint(String name, double latitude, double longitude) {
+        ContentValues values = new ContentValues();
+              // Задайте значения для каждого столбца
+        values.put(DatabaseHelper.NAME_COLUMN, name);
+        values.put(DatabaseHelper.LATITUDE_COLUMN, latitude);
+        values.put(DatabaseHelper.LONGITUDE_COLUMN, longitude);
+        // Вставляем данные в таблицу
+        db.insert("locations", null, values);
+        readDatabase();
+    }
+
+
+
 /*
     protected void createLocationRequest() {
         mLocationRequest = new LocationRequest();
@@ -188,12 +269,31 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         Log.d(LOG_TAG, "onActivityResult requestCode = " + requestCode + ", resultCode = "
                 + resultCode);
 
-
             float result = data.getFloatExtra(PARAM_RESULT, 0);
-        Log.d(LOG_TAG, "получили: " + result);
+        myLoc = data.getParcelableExtra(MY_LOCATION);
+     //   Log.d(LOG_TAG, "получили: " + result);
+     //   Log.d(LOG_TAG, "получили местоположение: " + myLoc.getLatitude());
 
-        tvkm.setText("" + convertDistance(result));
+        for(int i=0;  i < alarmItem.size(); i++) {
+            float[] res = new float[3];
+            Location.distanceBetween(alarmItem.get(i).getlatitude(), alarmItem.get(i).getLongitude(), myLoc.getLatitude(), myLoc.getLongitude(), res);
 
+            Log.d(LOG_TAG, "расстояние: " + res[0]);
+
+            alarmItem.get(i).setDistance(res[0]);
+
+             // tvkm.setText("" + convertDistance(res[0]));
+
+        }
+        adapter.notifyDataSetChanged();
+       // rv.notify();
+
+      //  tvkm.setText("" + convertDistance(result));
+/*
+        RelativeLayout.LayoutParams linLayoutParam = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT,
+                RelativeLayout.LayoutParams.MATCH_PARENT);
+        cardview.setLayoutParams(linLayoutParam);
+*/
 
     }
 
@@ -205,15 +305,15 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 if (start_stop) {
                     if(markerLoc!=null) {
                         start_stop = false;
-                        imgstart.setImageResource(R.drawable.mr_ic_pause_light);
+                      //  imgstart.setImageResource(R.drawable.mr_ic_pause_light);
                         Intent i = new Intent();
                         PendingIntent pi = createPendingResult(1, i, 0);
-                        startService(new Intent(this, MyService.class).putExtra(PARAM_PINTENT, pi).putExtra(LAT_LONG, markerLoc));
+                        startService(new Intent(this, MyService.class).putExtra(PARAM_PINTENT, pi).putExtra(LAT_LONG, markerLoc).putExtra(MODE_SERVICE, MODE_RUN_ALARMCLOCK));
                         linLayout.setBackgroundColor(Color.argb(255, 76, 175, 80));
                     }
                 } else {
                     start_stop = true;
-                    imgstart.setImageResource(R.drawable.mr_ic_play_light);
+                  //  imgstart.setImageResource(R.drawable.mr_ic_play_light);
                     linLayout.setBackgroundColor(Color.argb(255, 229, 115, 115));
                     stopService(new Intent(this, MyService.class));
                 }
@@ -264,29 +364,46 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             public void onMapClick(LatLng latLng) {
                 //  Log.d(LOG_TAG, "кликнули на карту");
 
-                markerLoc = latLng;
-                mMap.clear();
-
-                marker = new MarkerOptions().position(latLng).title("Дом");
-                mMap.addMarker(marker);
-
-                // mMap.addCircle(new CircleOptions());
-                float[] res = new float[3];
-                Location.distanceBetween(latLng.latitude, latLng.longitude, myLoc.latitude, myLoc.longitude, res);
-                // Log.d(LOG_TAG, "расстояние0: " + res[0]);
-                tvkm.setText("" + convertDistance(res[0]));
-                //Log.d(LOG_TAG, "расстояние1: " + res[1]);
-                // Log.d(LOG_TAG, "расстояние2: " + res[2]);
+                if(choisePoint) {
+                    //markerLoc = latLng;
+                    marker = new MarkerOptions().position(latLng).title(currentNamePoint);
+                    mMap.addMarker(marker);
+                    newPoint(currentNamePoint, latLng.latitude, latLng.longitude);
+                    choisePoint = false;
+                }
 
             }
         });
+
+
+        updateMap();
+        /*
+        for(int i=0;  i < alarmItem.size(); i++) {
+            alarmItem.get(i).getName();
+            LatLng latLng = new LatLng(alarmItem.get(i).getlatitude(), alarmItem.get(i).getLongitude());
+            marker = new MarkerOptions().position(latLng).title(alarmItem.get(i).getName());
+            mMap.addMarker(marker);
+        }
+
+*/
+
         // Add a marker in Sydney and move the camera
         //  LatLng sydney = new LatLng(-34, 151);
         //  mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
         //  mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
     }
 
-    private String convertDistance(float distance) {
+    public void updateMap() {
+        mMap.clear();
+        for(int i=0;  i < alarmItem.size(); i++) {
+            alarmItem.get(i).getName();
+            LatLng latLng = new LatLng(alarmItem.get(i).getlatitude(), alarmItem.get(i).getLongitude());
+            marker = new MarkerOptions().position(latLng).title(alarmItem.get(i).getName());
+            mMap.addMarker(marker);
+        }
+    }
+
+    public String convertDistance(float distance) {
         float resultdist = 0;
         String result = "0 km";
         int r;
@@ -320,6 +437,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public void onConnected(@Nullable Bundle bundle) {
         Log.d(LOG_TAG, "onConnected");
+        /*
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) !=
                 PackageManager.PERMISSION_GRANTED && ActivityCompat.
                 checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -340,7 +458,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             mMap.animateCamera(CameraUpdateFactory.zoomTo(14));
         }
 
-
+*/
     }
 
     @Override
@@ -411,6 +529,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         AppIndex.AppIndexApi.end(mGoogleApiClient, getIndexApiAction());
         mGoogleApiClient.disconnect();
     }
+
+
 
 /*
     @Override
