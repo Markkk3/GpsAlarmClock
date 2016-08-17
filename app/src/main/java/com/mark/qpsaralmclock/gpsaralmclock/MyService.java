@@ -4,12 +4,14 @@ import android.*;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.os.Vibrator;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
@@ -60,7 +62,7 @@ public class MyService extends Service implements LocationListener, GoogleApiCli
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d(LOG_TAG, "onStartCommand");
-       // MODE = intent.getIntExtra(MainActivity.MODE_SERVICE, 0);
+        MODE = intent.getIntExtra(MainActivity.MODE_SERVICE, 0);
         Log.d(LOG_TAG, "Mode = " + MODE);
         if (mGoogleApiClient == null) {
             // ATTENTION: This "addApi(AppIndex.API)"was auto-generated to implement the App Indexing API.
@@ -157,6 +159,13 @@ public class MyService extends Service implements LocationListener, GoogleApiCli
                 Location.distanceBetween(markerLoc.latitude, markerLoc.longitude, location.getLatitude(), location.getLongitude(), res);
                 Log.d(LOG_TAG, "Расстояние в серсисе: " + res[0]);
                 intent = new Intent().putExtra(MainActivity.PARAM_RESULT, res[0]).putExtra(MainActivity.MY_LOCATION, location);
+                if (res[0]<100) {
+
+                    long[] pattern = { 500, 300, 400, 200 };
+                    Vibrator vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+                    vibrator.vibrate(pattern, -1);
+
+                }
 
                 builder.setContentTitle(convertDistance(res[0]));
 

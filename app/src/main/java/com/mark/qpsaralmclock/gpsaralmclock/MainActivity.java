@@ -5,6 +5,7 @@ import android.Manifest;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
@@ -13,6 +14,7 @@ import android.graphics.Color;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Vibrator;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
@@ -27,6 +29,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
@@ -83,6 +86,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     LocationRequest mLocationRequest;
     LinearLayout linLayout;
     RecyclerView rv;
+    boolean zoomMap = true;
 
     String currentNamePoint="";
 
@@ -102,6 +106,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+     //   getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
 
         dbHelper = new DatabaseHelper(this);
         db = dbHelper.getWritableDatabase();
@@ -215,6 +221,27 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         adapter.notifyDataSetChanged();
 
 
+    }
+
+    public void vibrator() {
+        long mills = 500L;
+        Vibrator vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+        vibrator.vibrate(mills);
+    }
+
+    public void runAlarm(int id, int adapterPosition) {
+                Log.d(LOG_TAG, "Run Alarm" + id);
+        Intent i = new Intent();
+        PendingIntent pi = createPendingResult(1, i, 0);
+        LatLng latlng = new LatLng(alarmItem.get(adapterPosition).getlatitude(), alarmItem.get(adapterPosition).getLongitude());
+
+        startService(new Intent(this, MyService.class).putExtra(PARAM_PINTENT, pi).putExtra(LAT_LONG, latlng).putExtra(MODE_SERVICE, MODE_RUN_ALARMCLOCK));
+
+    }
+
+    public void stopAlarm(int id, int adapterPosition) {
+        Log.d(LOG_TAG, "Stop Alarm" + id);
+        stopService(new Intent(this, MyService.class));
 
     }
 
@@ -250,9 +277,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         values.put(DatabaseHelper.LONGITUDE_COLUMN, longitude);
         // Вставляем данные в таблицу
         db.insert("locations", null, values);
-        readDatabase();
-    }
+        alarmItem.add(new GifItem(name,  (float) latitude, (float) longitude, id));
+        adapter.notifyDataSetChanged();
 
+       // readDatabase();
+    }
 
 
 /*
@@ -273,6 +302,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         myLoc = data.getParcelableExtra(MY_LOCATION);
      //   Log.d(LOG_TAG, "получили: " + result);
      //   Log.d(LOG_TAG, "получили местоположение: " + myLoc.getLatitude());
+        if(zoomMap) {
+            mMap.moveCamera(CameraUpdateFactory.newLatLng(new LatLng(myLoc.getLatitude(), myLoc.getLongitude())));
+            mMap.animateCamera(CameraUpdateFactory.zoomTo(10));
+            zoomMap=false;
+        }
+
 
         for(int i=0;  i < alarmItem.size(); i++) {
             float[] res = new float[3];
@@ -529,6 +564,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         AppIndex.AppIndexApi.end(mGoogleApiClient, getIndexApiAction());
         mGoogleApiClient.disconnect();
     }
+
+
+
+
 
 
 

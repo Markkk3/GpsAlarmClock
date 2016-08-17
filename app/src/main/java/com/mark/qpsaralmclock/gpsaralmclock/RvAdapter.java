@@ -1,5 +1,6 @@
 package com.mark.qpsaralmclock.gpsaralmclock;
 
+import android.graphics.Color;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -7,8 +8,11 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+
+import com.google.android.gms.ads.internal.overlay.zzo;
 
 import java.util.ArrayList;
 
@@ -65,8 +69,10 @@ public class RvAdapter extends RecyclerView.Adapter<RvAdapter.ViewHolder> {
         TextView tvKm;
         CardView cv;
         RelativeLayout rl;
+        LinearLayout linlayout;
 
         ImageView imgdelete;
+        ImageView imgstart;
 
 
         public ViewHolder(View itemView) {
@@ -77,8 +83,34 @@ public class RvAdapter extends RecyclerView.Adapter<RvAdapter.ViewHolder> {
 
             tvname = (TextView) itemView.findViewById(R.id.tvname);
             tvKm = (TextView) itemView.findViewById(R.id.tvkm);
-
+            imgstart = (ImageView) itemView.findViewById(R.id.imgstart);
             imgdelete = (ImageView) itemView.findViewById(R.id.imgdelete);
+            linlayout = (LinearLayout) itemView.findViewById(R.id.lilayout);
+
+            imgstart.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    Log.d(LOG_TAG, "Кликнули на play: " + getAdapterPosition());
+                    if(!objects.get(getAdapterPosition()).getRun()) {
+                        linlayout.setBackgroundColor(Color.argb(255, 76, 175, 80));
+                        main.runAlarm(objects.get(getAdapterPosition()).getId(), getAdapterPosition());
+                        objects.get(getAdapterPosition()).setRun(true);
+                        imgstart.setImageResource(R.drawable.mr_ic_pause_light);
+
+                    }
+                    else {
+                        linlayout.setBackgroundColor(Color.argb(255, 229, 115, 115));
+                        objects.get(getAdapterPosition()).setRun(false);
+                        main.stopAlarm(objects.get(getAdapterPosition()).getId(), getAdapterPosition());
+                        imgstart.setImageResource(R.drawable.mr_ic_play_light);
+                    }
+
+
+                   //
+
+                }
+            });
+
 
             imgdelete.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -93,5 +125,6 @@ public class RvAdapter extends RecyclerView.Adapter<RvAdapter.ViewHolder> {
             });
 
         }
+
     }
 }
