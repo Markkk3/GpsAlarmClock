@@ -15,6 +15,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String NAME_COLUMN = "name";
     public static final String LATITUDE_COLUMN = "lat";
     public static final String LONGITUDE_COLUMN = "long";
+    public static final String RUN = "run";
     // имя базы данных
     private static final String DATABASE_NAME = "databaselocations.db";
     // версия базы данных
@@ -24,8 +25,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String DATABASE_CREATE_SCRIPT = "create table "
             + DATABASE_TABLE + " (" + ID
             + " integer primary key autoincrement, " + NAME_COLUMN
-            + " text not null, " + LATITUDE_COLUMN + " float, " + LONGITUDE_COLUMN
-            + " float);";
+            + " text not null, " + RUN + " integer, "+ LATITUDE_COLUMN
+            + " float, " + LONGITUDE_COLUMN + " float);";
 
     //+ BaseColumns._ID
   //  + " integer primary key autoincrement, "
@@ -33,6 +34,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public DatabaseHelper(Context context, String name, SQLiteDatabase.CursorFactory factory, int version) {
         super(context, name, factory, version);
     }
+
 
     DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);

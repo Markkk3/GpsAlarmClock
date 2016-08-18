@@ -46,6 +46,15 @@ public class RvAdapter extends RecyclerView.Adapter<RvAdapter.ViewHolder> {
         holder.tvname.setText(name);
         holder.tvKm.setText(main.convertDistance(currentGif.getDistance()));
 
+        if(objects.get(position).getRun()) {
+            holder.linlayout.setBackgroundColor(Color.argb(255, 76, 175, 80));
+            holder.imgstart.setImageResource(R.drawable.mr_ic_pause_light);
+        } else  {
+            holder.linlayout.setBackgroundColor(Color.argb(255, 229, 115, 115));
+            holder.imgstart.setImageResource(R.drawable.mr_ic_play_light);
+        }
+
+
     }
 /*
     public void upDatedistance() {
@@ -93,13 +102,16 @@ public class RvAdapter extends RecyclerView.Adapter<RvAdapter.ViewHolder> {
                     Log.d(LOG_TAG, "Кликнули на play: " + getAdapterPosition());
                     if(!objects.get(getAdapterPosition()).getRun()) {
                         linlayout.setBackgroundColor(Color.argb(255, 76, 175, 80));
+                        main.saveRun(true, objects.get(getAdapterPosition()).getId());
                         main.runAlarm(objects.get(getAdapterPosition()).getId(), getAdapterPosition());
                         objects.get(getAdapterPosition()).setRun(true);
                         imgstart.setImageResource(R.drawable.mr_ic_pause_light);
 
+
                     }
                     else {
                         linlayout.setBackgroundColor(Color.argb(255, 229, 115, 115));
+                        main.saveRun(false, objects.get(getAdapterPosition()).getId());
                         objects.get(getAdapterPosition()).setRun(false);
                         main.stopAlarm(objects.get(getAdapterPosition()).getId(), getAdapterPosition());
                         imgstart.setImageResource(R.drawable.mr_ic_play_light);

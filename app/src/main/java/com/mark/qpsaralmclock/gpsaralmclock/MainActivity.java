@@ -29,10 +29,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.WindowManager;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.google.android.gms.appindexing.Action;
@@ -50,7 +47,6 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.util.ArrayList;
-import java.util.Random;
 
 import static android.R.attr.id;
 
@@ -181,7 +177,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         Intent i = new Intent();
         PendingIntent pi = createPendingResult(1, i, 0);
-        startService(new Intent(this, MyService.class).putExtra(PARAM_PINTENT, pi).putExtra(MODE_SERVICE, MODE_MY_LOCATION));
+
+      //  bindService(new Intent(this, MyService.class).putExtra(PARAM_PINTENT, pi).putExtra(MODE_SERVICE, MODE_MY_LOCATION));
+
+      //  startService(new Intent(this, MyService.class).putExtra(PARAM_PINTENT, pi).putExtra(MODE_SERVICE, MODE_MY_LOCATION));
         readDatabase();
         //  Intent intent = new Intent(this, MapsActivity.class);
         //  startActivity(intent);
@@ -200,7 +199,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             String Name = cursor.getString(cursor.getColumnIndex(DatabaseHelper.NAME_COLUMN));
             float latitude = cursor.getFloat(cursor.getColumnIndex(DatabaseHelper.LATITUDE_COLUMN));
             float longitude = cursor.getFloat(cursor.getColumnIndex(DatabaseHelper.LONGITUDE_COLUMN));
-            alarmItem.add(new GifItem(Name,  latitude, longitude, id));
+           // int run = cursor.getInt(cursor.getColumnIndex(DatabaseHelper.RUN));
+            int run=0;
+            alarmItem.add(new GifItem(Name,  latitude, longitude, id, run));
             /*
             LatLng latLng = new LatLng(latitude, longitude);
             marker = new MarkerOptions().position(latLng).title(Name);
@@ -244,6 +245,23 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         stopService(new Intent(this, MyService.class));
 
     }
+    /*
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+
+        Log.d(LOG_TAG, "onKeyDown" + event);
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+            Log.d(LOG_TAG, "KeyEvent.KEYCODE_BACK" + keyCode);
+            return super.onKeyDown(KeyEvent.KEYCODE_HOME, event);
+        }
+        return super.onKeyDown(keyCode, event);
+    }
+
+    public void onBackPressed ()
+    {
+        Log.d(LOG_TAG, " onBackPressed");
+    }
+*/
+
 
     public void deleteItem(int id, int i) {
      //   db = dbHelper.getWritableDatabase();
@@ -275,12 +293,28 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         values.put(DatabaseHelper.NAME_COLUMN, name);
         values.put(DatabaseHelper.LATITUDE_COLUMN, latitude);
         values.put(DatabaseHelper.LONGITUDE_COLUMN, longitude);
+        values.put(DatabaseHelper.RUN, 0);
+
         // Вставляем данные в таблицу
         db.insert("locations", null, values);
-        alarmItem.add(new GifItem(name,  (float) latitude, (float) longitude, id));
+        alarmItem.add(new GifItem(name,  (float) latitude, (float) longitude, id, 0));
         adapter.notifyDataSetChanged();
 
        // readDatabase();
+    }
+
+    public void saveRun(boolean r, int idd) {
+        ContentValues values = new ContentValues();
+        int run=0;
+        if (r) {
+            run=1;
+        }
+        String g = Integer.toString(idd);
+        values.put(DatabaseHelper.RUN, run);
+        // обновляем по id
+        int updCount = db.update(DatabaseHelper.DATABASE_TABLE, values, "id = ?",
+                new String[] { g } );
+        Log.d(LOG_TAG, "updated rows count = " + updCount);
     }
 
 
@@ -310,10 +344,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
 
         for(int i=0;  i < alarmItem.size(); i++) {
+            Log.d(LOG_TAG, i+ " - Name: " + alarmItem.get(i).getName() + " Run: " + alarmItem.get(i).getRun());
+        }
+
+        for(int i=0;  i < alarmItem.size(); i++) {
             float[] res = new float[3];
             Location.distanceBetween(alarmItem.get(i).getlatitude(), alarmItem.get(i).getLongitude(), myLoc.getLatitude(), myLoc.getLongitude(), res);
 
-            Log.d(LOG_TAG, "расстояние: " + res[0]);
+            //Log.d(LOG_TAG, "расстояние: " + res[0]);
 
             alarmItem.get(i).setDistance(res[0]);
 
@@ -564,12 +602,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         AppIndex.AppIndexApi.end(mGoogleApiClient, getIndexApiAction());
         mGoogleApiClient.disconnect();
     }
-
-
-
-
-
-
 
 /*
     @Override

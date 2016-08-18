@@ -11,11 +11,13 @@ public class GifItem {
     boolean run = false;
 
 
-    GifItem(String n, float lat, float longit, int id1) {
+    GifItem(String n, float lat, float longit, int id1, int r) {
         name = n;
         latitude = lat;
         longitude = longit;
         id = id1;
+       if(r==1) run=true;
+        else run =false;
     }
 
     public float getlatitude() {

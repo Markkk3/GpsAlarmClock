@@ -7,6 +7,7 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
@@ -16,8 +17,10 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.NotificationCompat;
+import android.app.Notification;
+import android.app.NotificationManager;
 import android.support.v4.app.NotificationManagerCompat;
+import android.support.v4.app.TaskStackBuilder;
 import android.util.Log;
 
 import com.google.android.gms.appindexing.AppIndex;
@@ -40,7 +43,7 @@ public class MyService extends Service implements LocationListener, GoogleApiCli
     int t=5;
     Notification.Builder builder;
     Notification notification;
-    private NotificationManagerCompat notificationManager;
+    private NotificationManager notificationManager;
     int MODE=0;
 
 
@@ -84,18 +87,35 @@ public class MyService extends Service implements LocationListener, GoogleApiCli
 
                 markerLoc = intent.getParcelableExtra(MainActivity.LAT_LONG);
                 Log.d(LOG_TAG, "получили маркер: " +markerLoc.latitude);
+
+                Intent intent2 =  new Intent(this, MainActivity.class);
+                TaskStackBuilder  stackBuilder = TaskStackBuilder.create(this);
+                stackBuilder.addParentStack(MainActivity.class);
+                stackBuilder.addNextIntent(intent2);
+                PendingIntent pendongIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_CANCEL_CURRENT);
+
+                Notification notification = new Notification.Builder(this)
+                        .setSmallIcon(R.mipmap.ic_launcher)
+                        .setContentTitle("0 Km")
+                        .setContentText("Расстояние до точки")
+                        .setContentIntent(pendongIntent)
+                        .build();
+
+                notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                notificationManager.notify(101, notification);
+/*
                 builder = new Notification.Builder(getApplicationContext());
 // оставим только самое необходимое
                 builder.setContentIntent(pi)
                         .setSmallIcon(R.drawable.ic_setting_light)
                         .setContentTitle("0 Km")
-                        .setContentText("Расстояние до точки"); // Текст уведомления
+                         .setContentText("Расстояние до точки"); // Текст уведомления
 
                 notification = builder.build();
 
                 notificationManager = NotificationManagerCompat.from(this);
                 notificationManager.notify(101, notification);
-
+*/
                 break;
         }
 
@@ -160,13 +180,24 @@ public class MyService extends Service implements LocationListener, GoogleApiCli
                 Log.d(LOG_TAG, "Расстояние в серсисе: " + res[0]);
                 intent = new Intent().putExtra(MainActivity.PARAM_RESULT, res[0]).putExtra(MainActivity.MY_LOCATION, location);
                 if (res[0]<100) {
-
+/*
                     long[] pattern = { 500, 300, 400, 200 };
                     Vibrator vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
                     vibrator.vibrate(pattern, -1);
+*/
+                    long mills = 300L;
+                    Vibrator vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+                    vibrator.vibrate(mills);
+                    /*
+                    notification.ledARGB = Color.RED;
+                    notification.ledOffMS = 0;
+                    notification.ledOnMS = 1;
+                    notification.flags = notification.flags | Notification.FLAG_SHOW_LIGHTS;
+                    */
+
 
                 }
-
+/*
                 builder.setContentTitle(convertDistance(res[0]));
 
                 notification = builder.build();
@@ -174,7 +205,7 @@ public class MyService extends Service implements LocationListener, GoogleApiCli
                 notificationManager = NotificationManagerCompat.from(this);
 
                 notificationManager.notify(101, notification);
-
+*/
                 break;
         }
 
