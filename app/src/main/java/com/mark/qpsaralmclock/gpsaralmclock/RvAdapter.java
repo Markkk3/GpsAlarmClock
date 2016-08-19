@@ -42,7 +42,7 @@ public class RvAdapter extends RecyclerView.Adapter<RvAdapter.ViewHolder> {
         GifItem currentGif = objects.get(position);
 
         String name = currentGif.getName();
-        Log.d(LOG_TAG, "Получили расстоние " + currentGif.getDistance());
+     //   Log.d(LOG_TAG, "Получили расстоние " + currentGif.getDistance());
         holder.tvname.setText(name);
         holder.tvKm.setText(main.convertDistance(currentGif.getDistance()));
 
@@ -86,7 +86,7 @@ public class RvAdapter extends RecyclerView.Adapter<RvAdapter.ViewHolder> {
 
         public ViewHolder(View itemView) {
             super(itemView);
-            Log.d(LOG_TAG, "ViewHolder");
+       //     Log.d(LOG_TAG, "ViewHolder");
 
             cv = (CardView) itemView.findViewById(R.id.cardView);
 
@@ -103,7 +103,7 @@ public class RvAdapter extends RecyclerView.Adapter<RvAdapter.ViewHolder> {
                     if(!objects.get(getAdapterPosition()).getRun()) {
                         linlayout.setBackgroundColor(Color.argb(255, 76, 175, 80));
                         main.saveRun(true, objects.get(getAdapterPosition()).getId());
-                        main.runAlarm(objects.get(getAdapterPosition()).getId(), getAdapterPosition());
+                      //  main.runAlarm(objects.get(getAdapterPosition()).getId(), getAdapterPosition());
                         objects.get(getAdapterPosition()).setRun(true);
                         imgstart.setImageResource(R.drawable.mr_ic_pause_light);
 
@@ -113,6 +113,7 @@ public class RvAdapter extends RecyclerView.Adapter<RvAdapter.ViewHolder> {
                         linlayout.setBackgroundColor(Color.argb(255, 229, 115, 115));
                         main.saveRun(false, objects.get(getAdapterPosition()).getId());
                         objects.get(getAdapterPosition()).setRun(false);
+                        main.getMyService().notificationCancel();
                         main.stopAlarm(objects.get(getAdapterPosition()).getId(), getAdapterPosition());
                         imgstart.setImageResource(R.drawable.mr_ic_play_light);
                     }

@@ -4,9 +4,11 @@ package com.mark.qpsaralmclock.gpsaralmclock;
 import android.Manifest;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.ComponentName;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -14,7 +16,9 @@ import android.graphics.Color;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.os.Vibrator;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
@@ -47,6 +51,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.util.ArrayList;
+import java.util.concurrent.RunnableFuture;
 
 import static android.R.attr.id;
 
@@ -86,13 +91,17 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     String currentNamePoint="";
 
-    Service myservice;
+    //Service myservice;
 
 
     ArrayList<GifItem> alarmItem = new ArrayList<GifItem>();
     DatabaseHelper dbHelper;
     SQLiteDatabase db;
     RvAdapter adapter;
+
+    private  boolean bound = false;
+    private MyService myService;
+    int timeout = 1000;
 
 
 
@@ -119,20 +128,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                 new NewPointDialog().show(getFragmentManager(),
                         "login");
-/*
-                ContentValues values = new ContentValues();
-                Random r = new Random();
-                r.nextInt(100);
-                // Задайте значения для каждого столбца
-                values.put(DatabaseHelper.NAME_COLUMN, "Name " + r.nextInt(100));
-                values.put(DatabaseHelper.LATITUDE_COLUMN, "4954553443");
-                values.put(DatabaseHelper.LONGITUDE_COLUMN, "6987715365");
-        // Вставляем данные в таблицу
-        db.insert("locations", null, values);
-                readDatabase();
-                */
-    }
-});
+
+
+            }
+        });
 
         //    createLocationRequest();
         mapView = (MapView) findViewById(R.id.mapView);
@@ -178,20 +177,51 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         Intent i = new Intent();
         PendingIntent pi = createPendingResult(1, i, 0);
 
+        getDistance();
       //  bindService(new Intent(this, MyService.class).putExtra(PARAM_PINTENT, pi).putExtra(MODE_SERVICE, MODE_MY_LOCATION));
+        readDatabase();
+
 
       //  startService(new Intent(this, MyService.class).putExtra(PARAM_PINTENT, pi).putExtra(MODE_SERVICE, MODE_MY_LOCATION));
-        readDatabase();
+
         //  Intent intent = new Intent(this, MapsActivity.class);
         //  startActivity(intent);
+
     }
 
+    private ServiceConnection connection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName componentName, IBinder binder) {
+            Log.d(LOG_TAG, "onServiceConnected" );
+
+            MyService.MyServiceBinder myServiceBinder =
+                    (MyService.MyServiceBinder) binder;
+            myService = myServiceBinder.getMyService();
+            bound=true;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName componentName) {
+            Log.d(LOG_TAG, "onServiceDisconnected");
+            bound=false;
+        }
+    };
+
     private void readDatabase() {
+        Log.d(LOG_TAG, "readDatabase");
+
+        if(myService !=null) {
+            alarmItem = myService.getAlarmItem();
+            Log.d(LOG_TAG, "readDatabase myService !=null" + alarmItem.size());
+        }
+
         Cursor cursor = db.query("locations", new String[] {DatabaseHelper.ID,DatabaseHelper.NAME_COLUMN,
                         DatabaseHelper.LATITUDE_COLUMN, DatabaseHelper.LONGITUDE_COLUMN},
                 null, null,
                 null, null, null) ;
-        alarmItem.clear();
+       // alarmItem.clear();
+        int i =0 ;
+        int size = alarmItem.size();
 
 
         while (cursor.moveToNext()) {
@@ -199,9 +229,26 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             String Name = cursor.getString(cursor.getColumnIndex(DatabaseHelper.NAME_COLUMN));
             float latitude = cursor.getFloat(cursor.getColumnIndex(DatabaseHelper.LATITUDE_COLUMN));
             float longitude = cursor.getFloat(cursor.getColumnIndex(DatabaseHelper.LONGITUDE_COLUMN));
-           // int run = cursor.getInt(cursor.getColumnIndex(DatabaseHelper.RUN));
-            int run=0;
-            alarmItem.add(new GifItem(Name,  latitude, longitude, id, run));
+            // int run = cursor.getInt(cursor.getColumnIndex(DatabaseHelper.RUN));
+            int run = 0;
+            if (i >= size) {
+                alarmItem.add(new GifItem(Name, latitude, longitude, id, run));
+                Log.d(LOG_TAG, " i >= size" + i + "size = "+size);
+
+            }
+            else  {
+                if ( alarmItem.get(i) == null) {
+                    Log.d(LOG_TAG, " alarmItem.get(i) == null" + i);
+                    alarmItem.add(new GifItem(Name, latitude, longitude, id, run));
+                }
+                else {
+                    Log.d(LOG_TAG, "не изменяем");
+                }
+            }
+
+
+            i++;
+
             /*
             LatLng latLng = new LatLng(latitude, longitude);
             marker = new MarkerOptions().position(latLng).title(Name);
@@ -244,6 +291,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         Log.d(LOG_TAG, "Stop Alarm" + id);
         stopService(new Intent(this, MyService.class));
 
+    }
+
+    public MyService getMyService() {
+        return myService;
     }
     /*
     public boolean onKeyDown(int keyCode, KeyEvent event) {
@@ -316,6 +367,39 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 new String[] { g } );
         Log.d(LOG_TAG, "updated rows count = " + updCount);
     }
+
+
+    public void getDistance() {
+        Log.d(LOG_TAG, "getDistance");
+       final Handler handler = new android.os.Handler();
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                Log.d(LOG_TAG, "run"+ timeout);
+                if(timeout<6000) timeout +=500;
+                if(myService !=null) {
+                    Log.d(LOG_TAG, "myService !=null alarmItem = " + alarmItem.size());
+                    Log.d(LOG_TAG, "myService !=null getAlarmItem = " + myService.getAlarmItem().size());
+                  //  Log.d(LOG_TAG, "getDistance  = " + myService.getDistance());
+                    adapter.notifyDataSetChanged();
+
+                    if (myService.getAlarmItem() != alarmItem) {
+                        Log.d(LOG_TAG, "myService.getAlarmItem() != alarmItem alarmItem = " + alarmItem);
+                        Log.d(LOG_TAG, "myService.getAlarmItem() != alarmItem getAlarmItem = " + myService.getAlarmItem());
+                        myService.setAlarmItem(alarmItem);
+                    }
+
+                }
+                handler.postDelayed(this, timeout);
+            }
+        });
+
+    }
+
+    public ArrayList<GifItem> getAlarmItem() {
+        return alarmItem;
+    }
+
 
 
 /*
@@ -586,22 +670,32 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public void onStart() {
         super.onStart();
-
-        // ATTENTION: This was auto-generated to implement the App Indexing API.
-        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        Log.d(LOG_TAG, "onStart");
         mGoogleApiClient.connect();
         AppIndex.AppIndexApi.start(mGoogleApiClient, getIndexApiAction());
+
+        Intent intent = new Intent(this, MyService.class);
+        bindService(intent, connection, Context.BIND_AUTO_CREATE);
     }
 
     @Override
     public void onStop() {
         super.onStop();
-
+        Log.d(LOG_TAG, "onStop");
         // ATTENTION: This was auto-generated to implement the App Indexing API.
         // See https://g.co/AppIndexing/AndroidStudio for more information.
         AppIndex.AppIndexApi.end(mGoogleApiClient, getIndexApiAction());
         mGoogleApiClient.disconnect();
+
+        if(bound) {
+            Log.d(LOG_TAG, "onStop bound = " + bound);
+            unbindService(connection);
+            bound=false;
+
+        }
     }
+
+
 
 /*
     @Override
