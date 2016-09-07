@@ -38,11 +38,12 @@ public class RvAdapter extends RecyclerView.Adapter<RvAdapter.ViewHolder> {
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
+         Log.d(LOG_TAG, "Адаптер onBindViewHolder ");
      //   holder.currentItem = items.get(position);
         GifItem currentGif = objects.get(position);
 
         String name = currentGif.getName();
-     //   Log.d(LOG_TAG, "Получили расстоние " + currentGif.getDistance());
+        Log.d(LOG_TAG, "Получили расстоние " + currentGif.getDistance());
         holder.tvname.setText(name);
         holder.tvKm.setText(main.convertDistance(currentGif.getDistance()));
 
@@ -107,19 +108,15 @@ public class RvAdapter extends RecyclerView.Adapter<RvAdapter.ViewHolder> {
                         objects.get(getAdapterPosition()).setRun(true);
                         imgstart.setImageResource(R.drawable.mr_ic_pause_light);
 
-
                     }
                     else {
                         linlayout.setBackgroundColor(Color.argb(255, 229, 115, 115));
                         main.saveRun(false, objects.get(getAdapterPosition()).getId());
                         objects.get(getAdapterPosition()).setRun(false);
-                        main.getMyService().notificationCancel();
+                      //  main.getMyService().notificationCancel();
                         main.stopAlarm(objects.get(getAdapterPosition()).getId(), getAdapterPosition());
                         imgstart.setImageResource(R.drawable.mr_ic_play_light);
                     }
-
-
-                   //
 
                 }
             });
@@ -132,7 +129,6 @@ public class RvAdapter extends RecyclerView.Adapter<RvAdapter.ViewHolder> {
                     Log.d(LOG_TAG, "имя: " + objects.get(getAdapterPosition()).getName());
 
                     main.deleteItem(objects.get(getAdapterPosition()).getId(), getAdapterPosition());
-
 
                 }
             });

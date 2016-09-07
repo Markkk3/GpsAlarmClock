@@ -8,6 +8,7 @@ import android.content.ComponentName;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
@@ -19,6 +20,7 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Vibrator;
 import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
@@ -51,7 +53,6 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.util.ArrayList;
-import java.util.concurrent.RunnableFuture;
 
 import static android.R.attr.id;
 
@@ -66,7 +67,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     public final static String LAT_LONG = "ll";
     public final static String MY_LOCATION = "myloc";
 
-
+    Handler handler;
     MapView mapView;
     private GoogleMap mMap;
     GoogleApiClient mGoogleApiClient;
@@ -88,6 +89,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     LinearLayout linLayout;
     RecyclerView rv;
     boolean zoomMap = true;
+    boolean getdistanceStart = false;
 
     String currentNamePoint="";
 
@@ -102,15 +104,20 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private  boolean bound = false;
     private MyService myService;
     int timeout = 1000;
-
+    private Intent intent;
+    private Runnable runnableUpdateAdapter;
+    private SharedPreferences sp;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.d(LOG_TAG, "onCreate");
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        intent = new Intent(this, MyService.class);
+
      //   getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
 
@@ -174,29 +181,42 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     .addApi(AppIndex.API).build();
         }
 
+        sp =PreferenceManager.getDefaultSharedPreferences(this);
+
         Intent i = new Intent();
         PendingIntent pi = createPendingResult(1, i, 0);
 
-        getDistance();
+
       //  bindService(new Intent(this, MyService.class).putExtra(PARAM_PINTENT, pi).putExtra(MODE_SERVICE, MODE_MY_LOCATION));
         readDatabase();
 
+        startService(new Intent(this, MyService.class));
 
-      //  startService(new Intent(this, MyService.class).putExtra(PARAM_PINTENT, pi).putExtra(MODE_SERVICE, MODE_MY_LOCATION));
+        if(!getdistanceStart) getDistance();
+        //startService(new Intent(this, MyService.class).putExtra(PARAM_PINTENT, this);
 
         //  Intent intent = new Intent(this, MapsActivity.class);
         //  startActivity(intent);
 
     }
 
+    public  float getRadius() {
+        float radius = sp.getFloat("example_list", 100);
+        return radius;
+    }
+
+
+
     private ServiceConnection connection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName componentName, IBinder binder) {
-            Log.d(LOG_TAG, "onServiceConnected" );
+            Log.d(LOG_TAG, "MainActivity onServiceConnected" );
 
-            MyService.MyServiceBinder myServiceBinder =
-                    (MyService.MyServiceBinder) binder;
-            myService = myServiceBinder.getMyService();
+          //  MyService.MyServiceBinder myServiceBinder =
+          //          (MyService.MyServiceBinder) binder;
+          //  myService = myServiceBinder.getMyService();
+            myService = ((MyService.MyServiceBinder) binder).getMyService();
+
             bound=true;
         }
 
@@ -215,7 +235,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             Log.d(LOG_TAG, "readDatabase myService !=null" + alarmItem.size());
         }
 
-        Cursor cursor = db.query("locations", new String[] {DatabaseHelper.ID,DatabaseHelper.NAME_COLUMN,
+        Cursor cursor = db.query("locations", new String[] {DatabaseHelper.ID,DatabaseHelper.NAME_COLUMN, DatabaseHelper.RUN,
                         DatabaseHelper.LATITUDE_COLUMN, DatabaseHelper.LONGITUDE_COLUMN},
                 null, null,
                 null, null, null) ;
@@ -229,8 +249,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             String Name = cursor.getString(cursor.getColumnIndex(DatabaseHelper.NAME_COLUMN));
             float latitude = cursor.getFloat(cursor.getColumnIndex(DatabaseHelper.LATITUDE_COLUMN));
             float longitude = cursor.getFloat(cursor.getColumnIndex(DatabaseHelper.LONGITUDE_COLUMN));
-            // int run = cursor.getInt(cursor.getColumnIndex(DatabaseHelper.RUN));
-            int run = 0;
+           // Log.d(LOG_TAG, " cursor.getColumnIndex = " + cursor.getColumnIndex(DatabaseHelper.LONGITUDE_COLUMN));
+          //  Log.d(LOG_TAG, " cursor.getColumnIndex = " + cursor.getColumnIndex(DatabaseHelper.RUN));
+           // boolean runn = cursor.get(cursor.getColumnIndex(DatabaseHelper.RUN));
+            Boolean run = (cursor.getInt(cursor.getColumnIndex(DatabaseHelper.RUN)) == 1);
+         //   Log.d(LOG_TAG, " run = " + run);
+
             if (i >= size) {
                 alarmItem.add(new GifItem(Name, latitude, longitude, id, run));
                 Log.d(LOG_TAG, " i >= size" + i + "size = "+size);
@@ -289,7 +313,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     public void stopAlarm(int id, int adapterPosition) {
         Log.d(LOG_TAG, "Stop Alarm" + id);
-        stopService(new Intent(this, MyService.class));
+       // stopService(new Intent(this, MyService.class));
 
     }
 
@@ -313,7 +337,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 */
 
-
+//удаление будильника
     public void deleteItem(int id, int i) {
      //   db = dbHelper.getWritableDatabase();
         Log.d(LOG_TAG, "deleteItem i =" + i);
@@ -337,7 +361,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
        // newPoint(name);
 
     }
-
+// новая точка для будильника, запись в базу
     public void newPoint(String name, double latitude, double longitude) {
         ContentValues values = new ContentValues();
               // Задайте значения для каждого столбца
@@ -348,7 +372,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         // Вставляем данные в таблицу
         db.insert("locations", null, values);
-        alarmItem.add(new GifItem(name,  (float) latitude, (float) longitude, id, 0));
+        alarmItem.add(new GifItem(name,  (float) latitude, (float) longitude, id, false));
         adapter.notifyDataSetChanged();
 
        // readDatabase();
@@ -371,28 +395,34 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     public void getDistance() {
         Log.d(LOG_TAG, "getDistance");
-       final Handler handler = new android.os.Handler();
-        handler.post(new Runnable() {
+        getdistanceStart = true;
+       handler = new android.os.Handler();
+
+       runnableUpdateAdapter = new Runnable() {
             @Override
             public void run() {
-                Log.d(LOG_TAG, "run"+ timeout);
-                if(timeout<6000) timeout +=500;
+           //     Log.d(LOG_TAG, "run"+ timeout);
+                if(timeout<3000) timeout +=500;
                 if(myService !=null) {
-                    Log.d(LOG_TAG, "myService !=null alarmItem = " + alarmItem.size());
-                    Log.d(LOG_TAG, "myService !=null getAlarmItem = " + myService.getAlarmItem().size());
+                    Log.d(LOG_TAG, "getDistance, notifyDataSetChanged()");
+                    //   Log.d(LOG_TAG, "myService !=null getAlarmItem = " + myService.getAlarmItem().size());
                   //  Log.d(LOG_TAG, "getDistance  = " + myService.getDistance());
+                    myService.setAlarmItem(alarmItem);
                     adapter.notifyDataSetChanged();
 
                     if (myService.getAlarmItem() != alarmItem) {
-                        Log.d(LOG_TAG, "myService.getAlarmItem() != alarmItem alarmItem = " + alarmItem);
-                        Log.d(LOG_TAG, "myService.getAlarmItem() != alarmItem getAlarmItem = " + myService.getAlarmItem());
+                     //   Log.d(LOG_TAG, "myService.getAlarmItem() != alarmItem alarmItem = " + alarmItem);
+                    //    Log.d(LOG_TAG, "myService.getAlarmItem() != alarmItem getAlarmItem = " + myService.getAlarmItem());
                         myService.setAlarmItem(alarmItem);
+
                     }
 
                 }
                 handler.postDelayed(this, timeout);
             }
-        });
+        };
+        handler.post(runnableUpdateAdapter);
+       // handler.removeCallbacks(runnableUpdateAdapter);
 
     }
 
@@ -400,16 +430,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         return alarmItem;
     }
 
-
-
-/*
-    protected void createLocationRequest() {
-        mLocationRequest = new LocationRequest();
-        mLocationRequest.setInterval(10000);
-        mLocationRequest.setFastestInterval(5000);
-        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-    }
-*/
 
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -499,6 +519,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+            Intent intent = new Intent(this, SettingsActivity.class);
+            startActivity(intent);
             return true;
         }
 
@@ -630,8 +652,19 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
 
     public void onResume() {
+
+        Log.d(LOG_TAG, "onResume()" );
         super.onResume();
         mapView.onResume();
+
+            if(myService!= null) {
+                String radius = sp.getString("example_list", "100");
+                int r = Integer.parseInt(radius);
+                myService.setRadius(r);
+            }
+
+
+
 
     }
 
@@ -671,21 +704,26 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void onStart() {
         super.onStart();
         Log.d(LOG_TAG, "onStart");
-        mGoogleApiClient.connect();
+     /*   mGoogleApiClient.connect();
         AppIndex.AppIndexApi.start(mGoogleApiClient, getIndexApiAction());
-
+*/
         Intent intent = new Intent(this, MyService.class);
-        bindService(intent, connection, Context.BIND_AUTO_CREATE);
+        bindService(intent, connection, 0); //Context.BIND_AUTO_CREATE
+        if(!getdistanceStart) getDistance();
     }
 
     @Override
     public void onStop() {
         super.onStop();
         Log.d(LOG_TAG, "onStop");
+        handler.removeCallbacks(runnableUpdateAdapter);
+        getdistanceStart=false;
         // ATTENTION: This was auto-generated to implement the App Indexing API.
         // See https://g.co/AppIndexing/AndroidStudio for more information.
+        /*
         AppIndex.AppIndexApi.end(mGoogleApiClient, getIndexApiAction());
         mGoogleApiClient.disconnect();
+        */
 
         if(bound) {
             Log.d(LOG_TAG, "onStop bound = " + bound);
@@ -693,6 +731,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             bound=false;
 
         }
+
     }
 
 

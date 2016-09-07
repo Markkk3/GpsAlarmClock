@@ -44,9 +44,10 @@ public class MyService extends Service implements LocationListener, GoogleApiCli
     LatLng markerLoc =  null;
     int t=5;
     Notification.Builder builder;
-    Notification notification;
+    Notification notification = null;
     private NotificationManager notificationManager;
     int MODE=0;
+    float radius =100;
 
     private final IBinder binder = new MyServiceBinder();
     private PendingIntent pendongIntent;
@@ -73,7 +74,7 @@ public class MyService extends Service implements LocationListener, GoogleApiCli
     public void onCreate() {
         super.onCreate();
         Log.d(LOG_TAG, "MyS onCreate");
-
+/*
         if (mGoogleApiClient == null) {
             // ATTENTION: This "addApi(AppIndex.API)"was auto-generated to implement the App Indexing API.
             // See https://g.co/AppIndexing/AndroidStudio for more information.
@@ -85,7 +86,7 @@ public class MyService extends Service implements LocationListener, GoogleApiCli
         }
         mGoogleApiClient.connect();
         createLocationRequest();
-
+*/
     }
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
@@ -105,12 +106,12 @@ public class MyService extends Service implements LocationListener, GoogleApiCli
         mGoogleApiClient.connect();
         createLocationRequest();
 
-        pi = intent.getParcelableExtra(MainActivity.PARAM_PINTENT);
+       // pi = intent.getParcelableExtra(MainActivity.PARAM_PINTENT);
 
 
 
-                markerLoc = intent.getParcelableExtra(MainActivity.LAT_LONG);
-                Log.d(LOG_TAG, "MyS получили маркер: " +markerLoc.latitude);
+           //     markerLoc = intent.getParcelableExtra(MainActivity.LAT_LONG);
+//                Log.d(LOG_TAG, "MyS получили маркер: " +markerLoc.latitude);
 /*
                 Intent intent2 =  new Intent(this, MainActivity.class);
                 TaskStackBuilder  stackBuilder = TaskStackBuilder.create(this);
@@ -150,15 +151,20 @@ public class MyService extends Service implements LocationListener, GoogleApiCli
 
     public ArrayList<GifItem> getAlarmItem() {
 
-        Log.d(LOG_TAG, "MyS  getAlarmItem = " + alarmItem.size());
+       // Log.d(LOG_TAG, "MyS  getAlarmItem = " + alarmItem.size());
 
         return alarmItem;
     }
 
     public void setAlarmItem(ArrayList ar) {
-        Log.d(LOG_TAG, "MyS setAlarmItem = " + ar.size());
+      //  Log.d(LOG_TAG, "MyS setAlarmItem = " + ar.size());
 
         alarmItem = ar;
+    }
+
+    public void setRadius(float r) {
+          Log.d(LOG_TAG, "setRadius = " + r);
+        radius = r;
     }
 
     public void onDestroy() {
@@ -180,7 +186,7 @@ public class MyService extends Service implements LocationListener, GoogleApiCli
     protected void createLocationRequest() {
         Log.d(LOG_TAG, " MyS createLocationRequest()");
         mLocationRequest = new LocationRequest();
-        mLocationRequest.setInterval(6000);
+        mLocationRequest.setInterval(5000);
         mLocationRequest.setFastestInterval(2000);
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
        // startLocationUpdates();
@@ -209,10 +215,13 @@ public class MyService extends Service implements LocationListener, GoogleApiCli
     @Override
     public void onLocationChanged(Location location) {
         Log.d(LOG_TAG, "MyS onLocationChanged");
-        Intent intent = new Intent().putExtra(MainActivity.MY_LOCATION, location).putExtra(MainActivity.PARAM_RESULT, 1);
+
+        boolean notifyVisible = false;
+        float  mindistance = 0;
+      //  Intent intent = new Intent().putExtra(MainActivity.MY_LOCATION, location).putExtra(MainActivity.PARAM_RESULT, 1);
 
         for (int i = 0; i < alarmItem.size(); i++) {
-            Log.d(LOG_TAG, "MyS onLocationChanged Mame item = " +  alarmItem.get(i).getName());
+       //    Log.d(LOG_TAG, "MyS onLocCh item = " +  alarmItem.get(i).getName());
 
         float[] res = new float[3];
       //  Location.distanceBetween(markerLoc.latitude, markerLoc.longitude, location.getLatitude(), location.getLongitude(), res);
@@ -221,7 +230,7 @@ public class MyService extends Service implements LocationListener, GoogleApiCli
             alarmItem.get(i).setDistance(res[0]);
        // Log.d(LOG_TAG, "Расстояние в серсисе: " + res[0]);
      //   intent = new Intent().putExtra(MainActivity.PARAM_RESULT, res[0]).putExtra(MainActivity.MY_LOCATION, location);
-        if (res[0] < 100) {
+        if (res[0] < radius && alarmItem.get(i).getRun()) {
 /*
                     long[] pattern = { 500, 300, 400, 200 };
                     Vibrator vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
@@ -237,33 +246,37 @@ public class MyService extends Service implements LocationListener, GoogleApiCli
                     notification.flags = notification.flags | Notification.FLAG_SHOW_LIGHTS;
                     */
 
-
         }
 
-            if(alarmItem.get(i).getRun()){
-                notification = new Notification.Builder(this)
-                        .setSmallIcon(R.mipmap.ic_launcher)
-                        .setContentTitle(""+ convertDistance(res[0]))
-                        .setContentText("Расстояние до точки")
-                        .setContentIntent(pendongIntent)
-                        .build();
-                notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-                notificationManager.notify(101, notification);
+            if(alarmItem.get(i).getRun()) {
+              notifyVisible = true;
+                Log.d(LOG_TAG, "MyS notifyVisible = true: " + res[0]);
+                if(mindistance == 0) {
+                    mindistance = res[0];
+                }
+                else  {
+                    if (mindistance > res[0])  mindistance = res[0];
+                }
+
             }
-            else {
-               // if (notificationManager!=null)
-               // notificationManager.cancel(101);
-            }
-
-
-
-
-
-
-
 
 
     }
+
+        if(notifyVisible) {
+            notification = new Notification.Builder(this)
+                    .setSmallIcon(R.mipmap.ic_launcher)
+                    .setContentTitle(""+ convertDistance(mindistance))
+                    .setContentText("Расстояние до точки")
+                    .setContentIntent(pendongIntent)
+                    .build();
+            notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            notificationManager.notify(101, notification);
+        }
+        else {
+             if (notificationManager!=null)
+              notificationManager.cancel(101);
+        }
 
 
 /*

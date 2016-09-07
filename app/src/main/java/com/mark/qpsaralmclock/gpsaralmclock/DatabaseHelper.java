@@ -25,7 +25,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String DATABASE_CREATE_SCRIPT = "create table "
             + DATABASE_TABLE + " (" + ID
             + " integer primary key autoincrement, " + NAME_COLUMN
-            + " text not null, " + RUN + " integer, "+ LATITUDE_COLUMN
+            + " text not null, " + RUN + " flag INTEGER DEFAULT 0, "+ LATITUDE_COLUMN
             + " float, " + LONGITUDE_COLUMN + " float);";
 
     //+ BaseColumns._ID
