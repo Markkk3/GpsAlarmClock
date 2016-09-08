@@ -1,6 +1,7 @@
 package com.mark.qpsaralmclock.gpsaralmclock;
 
 import android.*;
+import android.app.AlarmManager;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -9,6 +10,9 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Location;
+import android.media.Ringtone;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.Binder;
 import android.os.Build;
 import android.os.Bundle;
@@ -48,13 +52,25 @@ public class MyService extends Service implements LocationListener, GoogleApiCli
     private NotificationManager notificationManager;
     int MODE=0;
     float radius =100;
+    Uri uri;
 
     private final IBinder binder = new MyServiceBinder();
     private PendingIntent pendongIntent;
     ArrayList<GifItem> alarmItem = new ArrayList<GifItem>();
+    private String stringUri = "content://settings/system/notification_sound";
+    private boolean vibroEnable;
+    private boolean stopself = false;
 
 
     public MyService() {
+    }
+
+    public void setStopSelf(boolean stopSelf) {
+        stopself = stopSelf;
+    }
+
+    public boolean getStopSelf() {
+        return stopself;
     }
 
     public class MyServiceBinder extends Binder {
@@ -91,7 +107,7 @@ public class MyService extends Service implements LocationListener, GoogleApiCli
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.d(LOG_TAG, "MyS onStartCommand");
+        Log.d(LOG_TAG, "MyS onStartCommand" + startId);
        // MODE = intent.getIntExtra(MainActivity.MODE_SERVICE, 0);
       //  Log.d(LOG_TAG, "Mode = " + MODE);
         if (mGoogleApiClient == null) {
@@ -105,6 +121,7 @@ public class MyService extends Service implements LocationListener, GoogleApiCli
         }
         mGoogleApiClient.connect();
         createLocationRequest();
+
 
        // pi = intent.getParcelableExtra(MainActivity.PARAM_PINTENT);
 
@@ -162,10 +179,14 @@ public class MyService extends Service implements LocationListener, GoogleApiCli
         alarmItem = ar;
     }
 
-    public void setRadius(float r) {
+    public void setRadius(float r, String uri, boolean vibro) {
           Log.d(LOG_TAG, "setRadius = " + r);
+        stringUri = uri;
         radius = r;
+        vibroEnable = vibro;
     }
+
+
 
     public void onDestroy() {
         super.onDestroy();
@@ -189,6 +210,7 @@ public class MyService extends Service implements LocationListener, GoogleApiCli
         mLocationRequest.setInterval(5000);
         mLocationRequest.setFastestInterval(2000);
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+
        // startLocationUpdates();
     }
 
@@ -204,12 +226,6 @@ public class MyService extends Service implements LocationListener, GoogleApiCli
                 mGoogleApiClient, mLocationRequest, this);
     }
 
-
-    void someTask() {
-
-        Log.d(LOG_TAG, "MyS sometask");
-
-    }
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
     @Override
@@ -235,10 +251,27 @@ public class MyService extends Service implements LocationListener, GoogleApiCli
                     long[] pattern = { 500, 300, 400, 200 };
                     Vibrator vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
                     vibrator.vibrate(pattern, -1);
+
+
 */
-            long mills = 300L;
-            Vibrator vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
-            vibrator.vibrate(mills);
+            if(vibroEnable) {
+                long mills = 300L;
+                Vibrator vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+                vibrator.vibrate(mills);
+            }
+
+            try {
+              //  Uri notify = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+                Uri notify = Uri.parse(stringUri);
+                Ringtone r = RingtoneManager.getRingtone(getApplicationContext(), notify);
+
+                Log.d(LOG_TAG, "Uri notify= " + notify);
+                r.play();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+          //  runAlarm();
+
                     /*
                     notification.ledARGB = Color.RED;
                     notification.ledOffMS = 0;
@@ -250,6 +283,7 @@ public class MyService extends Service implements LocationListener, GoogleApiCli
 
             if(alarmItem.get(i).getRun()) {
               notifyVisible = true;
+                stopself = false;
                 Log.d(LOG_TAG, "MyS notifyVisible = true: " + res[0]);
                 if(mindistance == 0) {
                     mindistance = res[0];
@@ -274,11 +308,18 @@ public class MyService extends Service implements LocationListener, GoogleApiCli
             notificationManager.notify(101, notification);
         }
         else {
+            stopself = true;
              if (notificationManager!=null)
               notificationManager.cancel(101);
         }
+/*
 
-
+        // останавливаем поток
+        if (stopself && !notifyVisible) {
+            Log.d(LOG_TAG, "делаем stopself() " );
+            stopService(new Intent(this, MyService.class));
+        }
+        */
 /*
                    
 
@@ -298,6 +339,18 @@ public class MyService extends Service implements LocationListener, GoogleApiCli
 */
 
     }
+
+    public void runAlarm() {
+        Log.d(LOG_TAG, "MyS  runAlarm() " );
+        AlarmManager am=(AlarmManager)this.getSystemService(Context.ALARM_SERVICE);
+        Intent intent=new Intent(this, MainActivity.class);
+        intent.putExtra("ONE_TIME", Boolean.FALSE);//Задаем параметр интента
+        PendingIntent pi= PendingIntent.getBroadcast(this,0, intent,0);
+//Устанавливаем интервал срабатывания в 5 секунд.
+        am.set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 4000, pi);
+       // am.setRepeating(AlarmManager.RTC_WAKEUP,System.currentTimeMillis(),1000*5,pi);
+    }
+
 
 
     public void notificationCancel() {

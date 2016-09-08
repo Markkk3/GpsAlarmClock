@@ -183,8 +183,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         sp =PreferenceManager.getDefaultSharedPreferences(this);
 
-        Intent i = new Intent();
-        PendingIntent pi = createPendingResult(1, i, 0);
+      //  Intent i = new Intent();
+       // PendingIntent pi = createPendingResult(1, i, 0);
 
 
       //  bindService(new Intent(this, MyService.class).putExtra(PARAM_PINTENT, pi).putExtra(MODE_SERVICE, MODE_MY_LOCATION));
@@ -378,14 +378,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
        // readDatabase();
     }
 
-    public void saveRun(boolean r, int idd) {
+    public void saveRun(int r, int idd) {
         ContentValues values = new ContentValues();
-        int run=0;
-        if (r) {
-            run=1;
-        }
         String g = Integer.toString(idd);
-        values.put(DatabaseHelper.RUN, run);
+        values.put(DatabaseHelper.RUN, r);
         // обновляем по id
         int updCount = db.update(DatabaseHelper.DATABASE_TABLE, values, "id = ?",
                 new String[] { g } );
@@ -659,8 +655,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             if(myService!= null) {
                 String radius = sp.getString("example_list", "100");
+                String uri = sp.getString("notifications_new_message_ringtone", "content://settings/system/notification_sound");
+                boolean vibro = sp.getBoolean("notifications_new_message_vibrate", true);
                 int r = Integer.parseInt(radius);
-                myService.setRadius(r);
+                myService.setRadius(r, uri, vibro);
             }
 
 
@@ -726,11 +724,19 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         */
 
         if(bound) {
+            myService.setStopSelf(true);
             Log.d(LOG_TAG, "onStop bound = " + bound);
             unbindService(connection);
             bound=false;
 
         }
+        /*
+        if( myService.getStopSelf()) {
+            Log.d(LOG_TAG, "делам стоп в методе активити онСтоп");
+            stopService(new Intent(this, MyService.class));
+
+        }
+*/
 
     }
 
