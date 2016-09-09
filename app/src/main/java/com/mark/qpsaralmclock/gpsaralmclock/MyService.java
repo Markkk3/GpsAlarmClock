@@ -22,10 +22,8 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 import android.support.v4.app.ActivityCompat;
-import android.app.Notification;
-import android.app.NotificationManager;
+import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
-import android.support.v4.app.TaskStackBuilder;
 import android.util.Log;
 
 import com.google.android.gms.appindexing.AppIndex;
@@ -37,6 +35,7 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.model.LatLng;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.concurrent.TimeUnit;
 
 public class MyService extends Service implements LocationListener, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
@@ -47,9 +46,9 @@ public class MyService extends Service implements LocationListener, GoogleApiCli
     PendingIntent pi;
     LatLng markerLoc =  null;
     int t=5;
-    Notification.Builder builder;
+    NotificationCompat.Builder builder;
     Notification notification = null;
-    private NotificationManager notificationManager;
+    private NotificationManagerCompat notificationManager;
     int MODE=0;
     float radius =100;
     Uri uri;
@@ -60,6 +59,7 @@ public class MyService extends Service implements LocationListener, GoogleApiCli
     private String stringUri = "content://settings/system/notification_sound";
     private boolean vibroEnable;
     private boolean stopself = false;
+    public  boolean runalarm = false;
 
 
     public MyService() {
@@ -270,7 +270,7 @@ public class MyService extends Service implements LocationListener, GoogleApiCli
             } catch (Exception e) {
                 e.printStackTrace();
             }
-          //  runAlarm();
+            runAlarm();
 
                     /*
                     notification.ledARGB = Color.RED;
@@ -298,6 +298,8 @@ public class MyService extends Service implements LocationListener, GoogleApiCli
     }
 
         if(notifyVisible) {
+            /*
+            Intent intent  = new Intent(this, MainActivity.class);
             notification = new Notification.Builder(this)
                     .setSmallIcon(R.mipmap.ic_launcher)
                     .setContentTitle(""+ convertDistance(mindistance))
@@ -305,6 +307,27 @@ public class MyService extends Service implements LocationListener, GoogleApiCli
                     .setContentIntent(pendongIntent)
                     .build();
             notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            notificationManager.notify(101, notification);
+*/
+            Intent notificationIntent = new Intent(this, MainActivity.class);
+
+            notificationIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP
+                    | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+
+            PendingIntent contentIntent = PendingIntent.getActivity(this,
+                    0, notificationIntent,
+                    PendingIntent.FLAG_CANCEL_CURRENT);
+
+            NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
+// оставим только самое необходимое
+            builder.setContentIntent(contentIntent)
+                    .setSmallIcon(R.mipmap.ic_launcher)
+                    .setContentTitle(""+ convertDistance(mindistance))
+                    .setContentText("Расстояние до точки"); // Текст уведомления
+
+            Notification notification = builder.build();
+
+            notificationManager = NotificationManagerCompat.from(this);
             notificationManager.notify(101, notification);
         }
         else {
@@ -341,19 +364,50 @@ public class MyService extends Service implements LocationListener, GoogleApiCli
     }
 
     public void runAlarm() {
+
         Log.d(LOG_TAG, "MyS  runAlarm() " );
-        AlarmManager am=(AlarmManager)this.getSystemService(Context.ALARM_SERVICE);
-        Intent intent=new Intent(this, MainActivity.class);
-        intent.putExtra("ONE_TIME", Boolean.FALSE);//Задаем параметр интента
-        PendingIntent pi= PendingIntent.getBroadcast(this,0, intent,0);
+     //   AlarmManager am=(AlarmManager)this.getSystemService(Context.ALARM_SERVICE);
+  //      Intent intent=new Intent(MyService.this, MainActivity.class);
+    //    intent.putExtra("ONE_TIME", Boolean.FALSE);//Задаем параметр интента
+    //    PendingIntent pi= PendingIntent.getBroadcast(this,0, intent,0);
 //Устанавливаем интервал срабатывания в 5 секунд.
-        am.set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 4000, pi);
+    //    am.set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 4000, pi);
+        /*
+        Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+        Log.d(LOG_TAG, "MyS  runAlarm() 1" );
+        PendingIntent pintent = PendingIntent.getService(MyService.this, 0, intent, 0);
+        Log.d(LOG_TAG, "MyS  runAlarm() 2" );
+        AlarmManager alarm = (AlarmManager)getSystemService(Context.ALARM_SERVICE);
+        Log.d(LOG_TAG, "MyS  runAlarm() 3" );
+        alarm.set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 5*1000, pintent);
+        Log.d(LOG_TAG, "MyS  runAlarm() 4" );
        // am.setRepeating(AlarmManager.RTC_WAKEUP,System.currentTimeMillis(),1000*5,pi);
+       */
+        /*
+        if(!runalarm) {
+            runalarm = true;
+            AlarmManager alarm = (AlarmManager)getSystemService(Context.ALARM_SERVICE);
+
+            Intent intent = new Intent(this, AlarmManagerBroadcastReceiver.class);
+            PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0,
+                    intent, PendingIntent.FLAG_CANCEL_CURRENT );
+// На случай, если мы ранее запускали активити, а потом поменяли время,
+// откажемся от уведомления
+            // am.cancel(pendingIntent);
+// Устанавливаем разовое напоминание
+            alarm.set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis()+4000, pendingIntent);
+            Log.d(LOG_TAG, "MyS  runAlarm() 4" );
+        }
+        */
+
     }
 
 
 
     public void notificationCancel() {
+
+        runalarm = false;
+
         if (notificationManager!=null)
         notificationManager.cancel(101);
     }
