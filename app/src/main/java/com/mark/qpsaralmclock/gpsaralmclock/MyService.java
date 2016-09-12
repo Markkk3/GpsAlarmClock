@@ -5,6 +5,7 @@ import android.app.AlarmManager;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -29,6 +30,8 @@ import android.util.Log;
 import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.PendingResult;
+import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
@@ -188,16 +191,19 @@ public class MyService extends Service implements LocationListener, GoogleApiCli
 
 
 
+
     public void onDestroy() {
         super.onDestroy();
-        /*
+        Log.d(LOG_TAG, "MyS onDestroy");
+        stopLocationUpdates();
+
         if(mGoogleApiClient!=  null) {
             mGoogleApiClient.disconnect();
         }
-*/
+
        // if(notificationManager!=  null) notificationManager.cancel(101);
 
-        Log.d(LOG_TAG, "MyS onDestroy");
+
     }
 
     public  String getDistance() {
@@ -207,8 +213,8 @@ public class MyService extends Service implements LocationListener, GoogleApiCli
     protected void createLocationRequest() {
         Log.d(LOG_TAG, " MyS createLocationRequest()");
         mLocationRequest = new LocationRequest();
-        mLocationRequest.setInterval(5000);
-        mLocationRequest.setFastestInterval(2000);
+        mLocationRequest.setInterval(2000);
+        mLocationRequest.setFastestInterval(1000);
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 
        // startLocationUpdates();
@@ -224,7 +230,17 @@ public class MyService extends Service implements LocationListener, GoogleApiCli
         }
         LocationServices.FusedLocationApi.requestLocationUpdates(
                 mGoogleApiClient, mLocationRequest, this);
+
+
+
+
     }
+
+    protected void stopLocationUpdates() {
+        Log.d(LOG_TAG, "MyS stopLocationUpdates()");
+         LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
+    }
+
 
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
@@ -240,10 +256,18 @@ public class MyService extends Service implements LocationListener, GoogleApiCli
        //    Log.d(LOG_TAG, "MyS onLocCh item = " +  alarmItem.get(i).getName());
 
         float[] res = new float[3];
+            MyApplication.lat = (float) location.getLatitude();
+            MyApplication.lng =(float) location.getLongitude();
+
       //  Location.distanceBetween(markerLoc.latitude, markerLoc.longitude, location.getLatitude(), location.getLongitude(), res);
         Location.distanceBetween(alarmItem.get(i).getlatitude(), alarmItem.get(i).getLongitude(), location.getLatitude(), location.getLongitude(), res);
 
             alarmItem.get(i).setDistance(res[0]);
+            if(res[0]> 0 && mLocationRequest.getInterval()<4000) {
+                Log.d(LOG_TAG, "Получили первое расстояние, увеличиваем время запроса");
+
+                mLocationRequest.setInterval(5000);
+            }
        // Log.d(LOG_TAG, "Расстояние в серсисе: " + res[0]);
      //   intent = new Intent().putExtra(MainActivity.PARAM_RESULT, res[0]).putExtra(MainActivity.MY_LOCATION, location);
         if (res[0] < radius && alarmItem.get(i).getRun()) {
@@ -253,7 +277,7 @@ public class MyService extends Service implements LocationListener, GoogleApiCli
                     vibrator.vibrate(pattern, -1);
 
 
-*/
+*//*
             if(vibroEnable) {
                 long mills = 300L;
                 Vibrator vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
@@ -270,7 +294,8 @@ public class MyService extends Service implements LocationListener, GoogleApiCli
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            runAlarm();
+            */
+            runAlarm(alarmItem.get(i), i);
 
                     /*
                     notification.ledARGB = Color.RED;
@@ -331,18 +356,22 @@ public class MyService extends Service implements LocationListener, GoogleApiCli
             notificationManager.notify(101, notification);
         }
         else {
-            stopself = true;
-             if (notificationManager!=null)
-              notificationManager.cancel(101);
+         //   stopself = true;
+             if (notificationManager!=null) {
+                 notificationManager.cancel(101);
+                 runalarm = false;
+             }
+
         }
-/*
+
 
         // останавливаем поток
         if (stopself && !notifyVisible) {
             Log.d(LOG_TAG, "делаем stopself() " );
-            stopService(new Intent(this, MyService.class));
+            stopSelf();
+         //   stopService(new Intent(this, MyService.class));
         }
-        */
+
 /*
                    
 
@@ -363,7 +392,7 @@ public class MyService extends Service implements LocationListener, GoogleApiCli
 
     }
 
-    public void runAlarm() {
+    public void runAlarm(GifItem gifItem, int i) {
 
         Log.d(LOG_TAG, "MyS  runAlarm() " );
      //   AlarmManager am=(AlarmManager)this.getSystemService(Context.ALARM_SERVICE);
@@ -383,9 +412,10 @@ public class MyService extends Service implements LocationListener, GoogleApiCli
         Log.d(LOG_TAG, "MyS  runAlarm() 4" );
        // am.setRepeating(AlarmManager.RTC_WAKEUP,System.currentTimeMillis(),1000*5,pi);
        */
-        /*
+
         if(!runalarm) {
             runalarm = true;
+            /*
             AlarmManager alarm = (AlarmManager)getSystemService(Context.ALARM_SERVICE);
 
             Intent intent = new Intent(this, AlarmManagerBroadcastReceiver.class);
@@ -395,12 +425,21 @@ public class MyService extends Service implements LocationListener, GoogleApiCli
 // откажемся от уведомления
             // am.cancel(pendingIntent);
 // Устанавливаем разовое напоминание
-            alarm.set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis()+4000, pendingIntent);
+            alarm.set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis()+6000, pendingIntent);
+          */
             Log.d(LOG_TAG, "MyS  runAlarm() 4" );
+            gifItem.getId();
+
+            Intent intent2 = new Intent(MyService.this, AlarmActivity.class);
+            intent2.putExtra("ID", gifItem.getId()).putExtra("pos", i);
+            PendingIntent pendingIntent2 = PendingIntent.getActivity(getApplicationContext(), 0, intent2, PendingIntent.FLAG_ONE_SHOT);
+            ((AlarmManager) getSystemService(ALARM_SERVICE)).set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 6 * 1000, pendingIntent2);
         }
-        */
+
 
     }
+
+
 
 
 

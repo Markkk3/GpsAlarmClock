@@ -35,6 +35,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -50,9 +51,12 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
 
 import static android.R.attr.id;
 
@@ -67,12 +71,15 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     public final static String LAT_LONG = "ll";
     public final static String MY_LOCATION = "myloc";
 
+    public final static String MY_LOCATION_LAT = "mylocLAT";
+    public final static String MY_LOCATION_LNG = "mylocLNG";
+
     Handler handler;
     MapView mapView;
     private GoogleMap mMap;
     GoogleApiClient mGoogleApiClient;
     final String LOG_TAG = "myLogs";
-    Location myLoc;
+    LatLng myLoc;
     LatLng markerLoc =  null;
     TextView tvName;
    // TextView tvkm;
@@ -96,7 +103,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     //Service myservice;
 
 
-    ArrayList<GifItem> alarmItem = new ArrayList<GifItem>();
+    public ArrayList<GifItem> alarmItem = new ArrayList<GifItem>();
     DatabaseHelper dbHelper;
     SQLiteDatabase db;
     RvAdapter adapter;
@@ -107,6 +114,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private Intent intent;
     private Runnable runnableUpdateAdapter;
     private SharedPreferences sp;
+    private SharedPreferences sPref;
 
 
     @Override
@@ -116,7 +124,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        readSharePreferences();
         intent = new Intent(this, MyService.class);
+
+
+      //  getWindow().addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED);
+     //   getWindow().addFlags(WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON);
+      //  getWindow().addFlags(WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD);
+     //   getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
      //   getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
@@ -200,11 +215,24 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     }
 
-    public  float getRadius() {
-        float radius = sp.getFloat("example_list", 100);
-        return radius;
+    private  void readSharePreferences() {
+        sPref = getPreferences(MODE_PRIVATE);
+        float myLocLat = sPref.getFloat(MY_LOCATION_LAT, 0);
+        float myLocLng = sPref.getFloat(MY_LOCATION_LNG, 0);
+        Log.d(LOG_TAG, "readSharePreferences() Lat =" + myLocLat + "lng = " + myLocLng);
+        myLoc = new LatLng(myLocLat, myLocLng);
+
     }
 
+    private  void writeSharePreferences() {
+        sPref = getPreferences(MODE_PRIVATE);
+        SharedPreferences.Editor ed = sPref.edit();
+        ed.putFloat(MY_LOCATION_LAT, MyApplication.lat);
+        ed.putFloat(MY_LOCATION_LNG, MyApplication.lng);
+        Log.d(LOG_TAG, "writeSharePreferences() Lat =" + MyApplication.lat + "lng = " + MyApplication.lng);
+        ed.commit();
+
+    }
 
 
     private ServiceConnection connection = new ServiceConnection() {
@@ -290,52 +318,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
      //   rv.setAdapter(adapter);
 
+        MyApplication myApplication =(MyApplication) getApplicationContext();
+        myApplication.alarmItem = this.alarmItem;
+
         adapter.notifyDataSetChanged();
 
 
     }
 
-    public void vibrator() {
-        long mills = 500L;
-        Vibrator vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
-        vibrator.vibrate(mills);
-    }
-
-    public void runAlarm(int id, int adapterPosition) {
-                Log.d(LOG_TAG, "Run Alarm" + id);
-        Intent i = new Intent();
-        PendingIntent pi = createPendingResult(1, i, 0);
-        LatLng latlng = new LatLng(alarmItem.get(adapterPosition).getlatitude(), alarmItem.get(adapterPosition).getLongitude());
-
-        startService(new Intent(this, MyService.class).putExtra(PARAM_PINTENT, pi).putExtra(LAT_LONG, latlng).putExtra(MODE_SERVICE, MODE_RUN_ALARMCLOCK));
-
-    }
-
-    public void stopAlarm(int id, int adapterPosition) {
-        Log.d(LOG_TAG, "Stop Alarm" + id);
-       // stopService(new Intent(this, MyService.class));
-
-    }
-
-    public MyService getMyService() {
-        return myService;
-    }
-    /*
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
-
-        Log.d(LOG_TAG, "onKeyDown" + event);
-        if (keyCode == KeyEvent.KEYCODE_BACK) {
-            Log.d(LOG_TAG, "KeyEvent.KEYCODE_BACK" + keyCode);
-            return super.onKeyDown(KeyEvent.KEYCODE_HOME, event);
-        }
-        return super.onKeyDown(keyCode, event);
-    }
-
-    public void onBackPressed ()
-    {
-        Log.d(LOG_TAG, " onBackPressed");
-    }
-*/
 
 //удаление будильника
     public void deleteItem(int id, int i) {
@@ -436,13 +426,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         myLoc = data.getParcelableExtra(MY_LOCATION);
      //   Log.d(LOG_TAG, "получили: " + result);
      //   Log.d(LOG_TAG, "получили местоположение: " + myLoc.getLatitude());
+        /*
         if(zoomMap) {
             mMap.moveCamera(CameraUpdateFactory.newLatLng(new LatLng(myLoc.getLatitude(), myLoc.getLongitude())));
             mMap.animateCamera(CameraUpdateFactory.zoomTo(10));
             zoomMap=false;
         }
-
-
+*/
+/*
         for(int i=0;  i < alarmItem.size(); i++) {
             Log.d(LOG_TAG, i+ " - Name: " + alarmItem.get(i).getName() + " Run: " + alarmItem.get(i).getRun());
         }
@@ -460,7 +451,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
         adapter.notifyDataSetChanged();
        // rv.notify();
-
+*/
       //  tvkm.setText("" + convertDistance(result));
 /*
         RelativeLayout.LayoutParams linLayoutParam = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT,
@@ -523,8 +514,15 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         return super.onOptionsItemSelected(item);
     }
 
+    public void setMapCamera() {
+
+
+    }
+
     @Override
     public void onMapReady(GoogleMap googleMap) {
+
+        Log.d(LOG_TAG, "onMapReady");
         mMap = googleMap;
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED && ActivityCompat.
@@ -552,6 +550,63 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
 
         updateMap();
+        Log.d(LOG_TAG, "mMap.getCameraPosition() = " +  alarmItem.get(2).getlatitude() );
+    /*    LatLngBounds AUSTRALIA;
+
+
+
+
+
+        mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(AUSTRALIA, 0));
+*/
+     //
+
+
+
+
+          mMap.moveCamera(CameraUpdateFactory.newLatLng(myLoc));
+        mMap.animateCamera(CameraUpdateFactory.zoomTo(12));
+
+/*
+        LatLngBounds.Builder builder = new LatLngBounds.Builder();
+
+
+       ArrayList<Marker> markers = new ArrayList<Marker>();
+        for(int i=0;  i < alarmItem.size(); i++) {
+            alarmItem.get(i).getName();
+            LatLng latLng = new LatLng(alarmItem.get(i).getlatitude(), alarmItem.get(i).getLongitude());
+           Marker  marker = new Marker(latLng);
+            markers.add(i, marker);
+
+        }
+
+
+        for (Marker marker : markers) {
+            builder.include(marker.getPosition());
+        }
+        LatLngBounds bounds = builder.build();
+*/
+
+
+
+     //  LatLngBounds AUSTRALIA = new LatLngBounds(
+     //           new LatLng(alarmItem.get(2).getlatitude(), alarmItem.get(2).getLongitude()), new LatLng(54, 28));
+
+     //   LatLngBounds AUSTRALIA = new LatLngBounds(
+     //           new LatLng(53, 27), new LatLng(54, 28));
+
+       //  mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(AUSTRALIA, 0));
+     //  LatLngBounds AUSTRALIA = new LatLngBounds(
+      //          new LatLng(-44, 113), new LatLng(-10, 154));
+
+// Set the camera to the greatest possible zoom level that includes the
+// bounds
+    //    mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(AUSTRALIA, 0));
+
+
+
+
+
         /*
         for(int i=0;  i < alarmItem.size(); i++) {
             alarmItem.get(i).getName();
@@ -715,7 +770,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         super.onStop();
         Log.d(LOG_TAG, "onStop");
         handler.removeCallbacks(runnableUpdateAdapter);
+        writeSharePreferences();
         getdistanceStart=false;
+       // stopService(new Intent(this, MyService.class));
         // ATTENTION: This was auto-generated to implement the App Indexing API.
         // See https://g.co/AppIndexing/AndroidStudio for more information.
         /*
