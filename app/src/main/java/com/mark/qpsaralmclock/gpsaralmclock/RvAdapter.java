@@ -31,7 +31,7 @@ public class RvAdapter extends RecyclerView.Adapter<RvAdapter.ViewHolder> {
         View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.item, parent, false);
         ViewHolder vh = new ViewHolder(v);
         main = (MainActivity) parent.getContext();
-
+        main.drawLine();
         Log.d(LOG_TAG, "Адаптер onCreateViewHolder ");
         return vh;
     }
@@ -41,7 +41,6 @@ public class RvAdapter extends RecyclerView.Adapter<RvAdapter.ViewHolder> {
      //    Log.d(LOG_TAG, "Адаптер onBindViewHolder ");
      //   holder.currentItem = items.get(position);
         GifItem currentGif = objects.get(position);
-
         String name = currentGif.getName();
      //   Log.d(LOG_TAG, "Получили расстоние " + currentGif.getDistance());
         holder.tvname.setText(name);
@@ -54,6 +53,8 @@ public class RvAdapter extends RecyclerView.Adapter<RvAdapter.ViewHolder> {
             holder.linlayout.setBackgroundColor(Color.argb(255, 229, 115, 115));
             holder.imgstart.setImageResource(R.drawable.mr_ic_play_light);
         }
+
+
 
 
     }
@@ -101,11 +102,13 @@ public class RvAdapter extends RecyclerView.Adapter<RvAdapter.ViewHolder> {
                 @Override
                 public void onClick(View view) {
                     Log.d(LOG_TAG, "Кликнули на play: " + getAdapterPosition());
+
                     if(!objects.get(getAdapterPosition()).getRun()) {
                         linlayout.setBackgroundColor(Color.argb(255, 76, 175, 80));
                         main.saveRun(1, objects.get(getAdapterPosition()).getId());
                       //  main.runAlarm(objects.get(getAdapterPosition()).getId(), getAdapterPosition());
                         objects.get(getAdapterPosition()).setRun(true);
+                       // main.drawLine(getAdapterPosition());
                         imgstart.setImageResource(R.drawable.mr_ic_pause_light);
 
                     }
@@ -117,6 +120,7 @@ public class RvAdapter extends RecyclerView.Adapter<RvAdapter.ViewHolder> {
 
                         imgstart.setImageResource(R.drawable.mr_ic_play_light);
                     }
+                    main.drawLine();
 
                 }
             });

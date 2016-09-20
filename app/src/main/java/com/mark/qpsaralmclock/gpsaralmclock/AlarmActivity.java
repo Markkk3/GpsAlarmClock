@@ -47,7 +47,7 @@ public class AlarmActivity extends AppCompatActivity implements View.OnClickList
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD);
-      //  getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         setContentView(R.layout.activity_alarm);
 
@@ -64,7 +64,7 @@ public class AlarmActivity extends AppCompatActivity implements View.OnClickList
         btnstop.setOnClickListener(this);
         sp = PreferenceManager.getDefaultSharedPreferences(this);
 
-        String radius = sp.getString("example_list", "100");
+        String radius = sp.getString(getResources().getString(R.string.radius), "100");
         uri = sp.getString("notifications_new_message_ringtone", "content://settings/system/notification_sound");
         vibro = sp.getBoolean("notifications_new_message_vibrate", true);
         int r = Integer.parseInt(radius);

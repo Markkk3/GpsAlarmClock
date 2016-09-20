@@ -2,6 +2,7 @@ package com.mark.qpsaralmclock.gpsaralmclock;
 
 
 import android.Manifest;
+import android.annotation.TargetApi;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.ComponentName;
@@ -14,8 +15,10 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
+import android.graphics.Matrix;
 import android.location.Location;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Vibrator;
@@ -23,6 +26,7 @@ import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.RequiresApi;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -31,12 +35,26 @@ import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.transition.AutoTransition;
+import android.transition.ChangeBounds;
+import android.transition.ChangeImageTransform;
+import android.transition.Fade;
+import android.transition.Scene;
+import android.transition.TransitionManager;
+import android.transition.TransitionSet;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.view.animation.AccelerateInterpolator;
+import android.view.animation.Animation;
+import android.view.animation.LinearInterpolator;
+import android.view.animation.Transformation;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.google.android.gms.appindexing.Action;
@@ -46,14 +64,19 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.Circle;
+import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
 
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
@@ -103,7 +126,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     //Service myservice;
 
 
-    public ArrayList<GifItem> alarmItem = new ArrayList<GifItem>();
+ //   public ArrayList<GifItem> alarmItem = new ArrayList<GifItem>();
     DatabaseHelper dbHelper;
     SQLiteDatabase db;
     RvAdapter adapter;
@@ -115,6 +138,15 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private Runnable runnableUpdateAdapter;
     private SharedPreferences sp;
     private SharedPreferences sPref;
+    int heightMap;
+
+    MyApplication myApplication;
+
+    //Circle circle;
+    //Polyline polyline;
+    ArrayList<Polyline> polylineArrayList = new ArrayList<Polyline>();
+    ArrayList<Circle> circleArrayList = new ArrayList<Circle>();
+    private RelativeLayout.LayoutParams lParams;
 
 
     @Override
@@ -122,22 +154,16 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         super.onCreate(savedInstanceState);
         Log.d(LOG_TAG, "onCreate");
         setContentView(R.layout.activity_main);
+
+        myApplication =(MyApplication) getApplicationContext();
+
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         readSharePreferences();
         intent = new Intent(this, MyService.class);
 
-
-      //  getWindow().addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED);
-     //   getWindow().addFlags(WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON);
-      //  getWindow().addFlags(WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD);
-     //   getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-
-     //   getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-
-
         dbHelper = new DatabaseHelper(this);
-        db = dbHelper.getWritableDatabase();
+
        // int clearCount = db.delete(DatabaseHelper.DATABASE_TABLE, null, null);
       //  Log.d(LOG_TAG, "deleted rows count = " + clearCount);
 
@@ -171,11 +197,19 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         linLayout = (LinearLayout) findViewById(R.id.lilayout);
         cardview = (CardView) findViewById(R.id.cardView);
 
+        lParams = (RelativeLayout.LayoutParams) cardview.getLayoutParams();
+       // lParams.height = RecyclerView.LayoutParams.MATCH_PARENT;
+       // lParams.height = cardview.getHeight();
+        heightMap = lParams.height;
+//        Log.d(LOG_TAG, "высота карты =" + lParams.height);
+
+
+
 
         rv = (RecyclerView) findViewById(R.id.rv);
 
 
-        adapter = new RvAdapter(alarmItem);
+        adapter = new RvAdapter(myApplication.alarmItem);
         rv.setAdapter(adapter);
 //        rv.notify();
         //  mMap.addMarker(marker);
@@ -257,19 +291,18 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private void readDatabase() {
         Log.d(LOG_TAG, "readDatabase");
-
-        if(myService !=null) {
-            alarmItem = myService.getAlarmItem();
-            Log.d(LOG_TAG, "readDatabase myService !=null" + alarmItem.size());
-        }
+        db = dbHelper.getWritableDatabase();
 
         Cursor cursor = db.query("locations", new String[] {DatabaseHelper.ID,DatabaseHelper.NAME_COLUMN, DatabaseHelper.RUN,
                         DatabaseHelper.LATITUDE_COLUMN, DatabaseHelper.LONGITUDE_COLUMN},
                 null, null,
                 null, null, null) ;
        // alarmItem.clear();
-        int i =0 ;
-        int size = alarmItem.size();
+        int size = myApplication.alarmItem.size();
+        if(size>0) {
+            Log.d(LOG_TAG, "очищаем myApplication.alarmItem");
+            myApplication.alarmItem.clear();
+        }
 
 
         while (cursor.moveToNext()) {
@@ -277,82 +310,134 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             String Name = cursor.getString(cursor.getColumnIndex(DatabaseHelper.NAME_COLUMN));
             float latitude = cursor.getFloat(cursor.getColumnIndex(DatabaseHelper.LATITUDE_COLUMN));
             float longitude = cursor.getFloat(cursor.getColumnIndex(DatabaseHelper.LONGITUDE_COLUMN));
-           // Log.d(LOG_TAG, " cursor.getColumnIndex = " + cursor.getColumnIndex(DatabaseHelper.LONGITUDE_COLUMN));
-          //  Log.d(LOG_TAG, " cursor.getColumnIndex = " + cursor.getColumnIndex(DatabaseHelper.RUN));
-           // boolean runn = cursor.get(cursor.getColumnIndex(DatabaseHelper.RUN));
             Boolean run = (cursor.getInt(cursor.getColumnIndex(DatabaseHelper.RUN)) == 1);
-         //   Log.d(LOG_TAG, " run = " + run);
 
-            if (i >= size) {
-                alarmItem.add(new GifItem(Name, latitude, longitude, id, run));
-                Log.d(LOG_TAG, " i >= size" + i + "size = "+size);
-
-            }
-            else  {
-                if ( alarmItem.get(i) == null) {
-                    Log.d(LOG_TAG, " alarmItem.get(i) == null" + i);
-                    alarmItem.add(new GifItem(Name, latitude, longitude, id, run));
-                }
-                else {
-                    Log.d(LOG_TAG, "не изменяем");
-                }
-            }
-
-
-            i++;
-
-            /*
-            LatLng latLng = new LatLng(latitude, longitude);
-            marker = new MarkerOptions().position(latLng).title(Name);
-
-            if (mMap!=null) {
-                mMap.addMarker(marker);
-            }
-*/
+            myApplication.alarmItem.add(new GifItem(Name, latitude, longitude, id, run));
 
             Log.d(LOG_TAG, "id=" + id +" Name =" + Name + " longitude =" + longitude + " latitude =" + latitude);
         }
         // не забываем закрывать курсор
         cursor.close();
-      //  RvAdapter adapter = new RvAdapter(alarmItem);
-
-     //   rv.setAdapter(adapter);
-
-        MyApplication myApplication =(MyApplication) getApplicationContext();
-        myApplication.alarmItem = this.alarmItem;
+        db.close();
 
         adapter.notifyDataSetChanged();
 
-
     }
-
 
 //удаление будильника
     public void deleteItem(int id, int i) {
-     //   db = dbHelper.getWritableDatabase();
+
         Log.d(LOG_TAG, "deleteItem i =" + i);
 
+        db = dbHelper.getWritableDatabase();
         int delCount = db.delete(DatabaseHelper.DATABASE_TABLE, "id = " + id, null);
         Log.d(LOG_TAG, "deleted rows count = " + delCount);
-        alarmItem.remove(i);
+        myApplication.alarmItem.remove(i);
         adapter.notifyDataSetChanged();
         updateMap();
 
-       // readDatabase();
-       //alarmItem.remove();
-
-    //    dbHelper.close();
+        db.close();
     }
+
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     @Override
     public void onComplete(String name) {
         Log.d(LOG_TAG, "получили =" + name);
         currentNamePoint = name;
         choisePoint = true;
+        animationMap();
+       // lParams.height = RecyclerView.LayoutParams.MATCH_PARENT;
+
+       // cardview.startAnimation(new ViewAnimation());
+
+/*
+        ViewGroup sceneRoot = (ViewGroup) findViewById(R.id.scene_root);
+
+        final Scene scene2 = Scene.getSceneForLayout(sceneRoot, R.layout.content_main, this);
+
+        TransitionSet set = new TransitionSet();
+        set.addTransition(new Fade());
+        set.addTransition(new ChangeBounds());
+        // выполняться они будут одновременно
+     //   set.setOrdering(TransitionSet.ORDERING_TOGETHER);
+        // уставим свою длительность анимации
+        set.setDuration(1500);
+        // и изменим Interpolator
+        set.setInterpolator(new AccelerateInterpolator());
+        TransitionManager.go(scene2, set);
+*/
+        //    ViewGroup cardview1 = (ViewGroup) findViewById(R.id.cardView);
+
+    //    TransitionManager.beginDelayedTransition(cardview1);
+
        // newPoint(name);
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+    private void animationMap() {
+
+        ViewGroup sceneRoot = (ViewGroup) findViewById(R.id.content_main);
+        //  View cardview =  sceneRoot.findViewById(R.id.cardView);
+
+        TransitionSet set = new TransitionSet();
+        set.addTransition(new ChangeBounds());
+        // set.addTransition(new ChangeImageTransform());
+        // set.addTransition(new Fade());
+
+        // выполняться они будут одновременно
+        set.setOrdering(TransitionSet.ORDERING_TOGETHER);
+        // уставим свою длительность анимации
+        set.setDuration(500);
+        set.setStartDelay(500);
+
+        TransitionManager.beginDelayedTransition(sceneRoot, set);
+
+        // и применим сами изменения
+        ViewGroup.LayoutParams params = cardview.getLayoutParams();
+        //  params.width = newSquareSize;
+        params.height = RecyclerView.LayoutParams.MATCH_PARENT;
+
+        cardview.setLayoutParams(params);
+
 
     }
+
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+    private void animationMap2() {
+
+        ViewGroup sceneRoot = (ViewGroup) findViewById(R.id.content_main);
+      //  View cardview =  sceneRoot.findViewById(R.id.cardView);
+
+        TransitionSet set = new TransitionSet();
+
+
+        set.addTransition(new Fade());
+       // set.addTransition(new ChangeImageTransform());
+        set.addTransition(new ChangeBounds());
+        set.addTransition(new AutoTransition());
+
+
+
+        // выполняться они будут одновременно
+        set.setOrdering(TransitionSet.ORDERING_SEQUENTIAL);
+        // уставим свою длительность анимации
+        set.setDuration(500);
+        set.setStartDelay(500);
+        TransitionManager.beginDelayedTransition(sceneRoot, set);
+
+        // и применим сами изменения
+        ViewGroup.LayoutParams params = cardview.getLayoutParams();
+        //  params.width = newSquareSize;
+        params.height = heightMap;
+        cardview.setLayoutParams(params);
+
+    }
+
 // новая точка для будильника, запись в базу
     public void newPoint(String name, double latitude, double longitude) {
+        db = dbHelper.getWritableDatabase();
         ContentValues values = new ContentValues();
               // Задайте значения для каждого столбца
         values.put(DatabaseHelper.NAME_COLUMN, name);
@@ -362,19 +447,20 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         // Вставляем данные в таблицу
         db.insert("locations", null, values);
-        alarmItem.add(new GifItem(name,  (float) latitude, (float) longitude, id, false));
+        myApplication.alarmItem.add(new GifItem(name,  (float) latitude, (float) longitude, id, false));
         adapter.notifyDataSetChanged();
-
-       // readDatabase();
+        db.close();
     }
 
     public void saveRun(int r, int idd) {
+        db = dbHelper.getWritableDatabase();
         ContentValues values = new ContentValues();
         String g = Integer.toString(idd);
         values.put(DatabaseHelper.RUN, r);
         // обновляем по id
         int updCount = db.update(DatabaseHelper.DATABASE_TABLE, values, "id = ?",
                 new String[] { g } );
+        db.close();
         Log.d(LOG_TAG, "updated rows count = " + updCount);
     }
 
@@ -382,7 +468,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void getDistance() {
         Log.d(LOG_TAG, "getDistance");
         getdistanceStart = true;
-       handler = new android.os.Handler();
+       handler = new Handler();
 
        runnableUpdateAdapter = new Runnable() {
             @Override
@@ -393,16 +479,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     Log.d(LOG_TAG, "getDistance, notifyDataSetChanged()");
                     //   Log.d(LOG_TAG, "myService !=null getAlarmItem = " + myService.getAlarmItem().size());
                   //  Log.d(LOG_TAG, "getDistance  = " + myService.getDistance());
-                    myService.setAlarmItem(alarmItem);
+            //        myService.setAlarmItem(alarmItem);
                     adapter.notifyDataSetChanged();
-
-                    if (myService.getAlarmItem() != alarmItem) {
-                     //   Log.d(LOG_TAG, "myService.getAlarmItem() != alarmItem alarmItem = " + alarmItem);
-                    //    Log.d(LOG_TAG, "myService.getAlarmItem() != alarmItem getAlarmItem = " + myService.getAlarmItem());
-                        myService.setAlarmItem(alarmItem);
-
-                    }
-
+                   if(!choisePoint) drawLine();
                 }
                 handler.postDelayed(this, timeout);
             }
@@ -412,53 +491,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     }
 
-    public ArrayList<GifItem> getAlarmItem() {
-        return alarmItem;
-    }
-
 
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         Log.d(LOG_TAG, "onActivityResult requestCode = " + requestCode + ", resultCode = "
                 + resultCode);
-
-            float result = data.getFloatExtra(PARAM_RESULT, 0);
-        myLoc = data.getParcelableExtra(MY_LOCATION);
-     //   Log.d(LOG_TAG, "получили: " + result);
-     //   Log.d(LOG_TAG, "получили местоположение: " + myLoc.getLatitude());
-        /*
-        if(zoomMap) {
-            mMap.moveCamera(CameraUpdateFactory.newLatLng(new LatLng(myLoc.getLatitude(), myLoc.getLongitude())));
-            mMap.animateCamera(CameraUpdateFactory.zoomTo(10));
-            zoomMap=false;
-        }
-*/
-/*
-        for(int i=0;  i < alarmItem.size(); i++) {
-            Log.d(LOG_TAG, i+ " - Name: " + alarmItem.get(i).getName() + " Run: " + alarmItem.get(i).getRun());
-        }
-
-        for(int i=0;  i < alarmItem.size(); i++) {
-            float[] res = new float[3];
-            Location.distanceBetween(alarmItem.get(i).getlatitude(), alarmItem.get(i).getLongitude(), myLoc.getLatitude(), myLoc.getLongitude(), res);
-
-            //Log.d(LOG_TAG, "расстояние: " + res[0]);
-
-            alarmItem.get(i).setDistance(res[0]);
-
-             // tvkm.setText("" + convertDistance(res[0]));
-
-        }
-        adapter.notifyDataSetChanged();
-       // rv.notify();
-*/
-      //  tvkm.setText("" + convertDistance(result));
-/*
-        RelativeLayout.LayoutParams linLayoutParam = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT,
-                RelativeLayout.LayoutParams.MATCH_PARENT);
-        cardview.setLayoutParams(linLayoutParam);
-*/
-
     }
 
 
@@ -533,6 +570,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
         mMap.setMyLocationEnabled(true);
         mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
+            @RequiresApi(api = Build.VERSION_CODES.KITKAT)
             @Override
             public void onMapClick(LatLng latLng) {
                 //  Log.d(LOG_TAG, "кликнули на карту");
@@ -543,6 +581,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     mMap.addMarker(marker);
                     newPoint(currentNamePoint, latLng.latitude, latLng.longitude);
                     choisePoint = false;
+                  //  lParams.height = heightMap;
+
+                    animationMap2();
+
+                }
+                else {
+                    moveMapCamera();
                 }
 
             }
@@ -550,42 +595,18 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
 
         updateMap();
-        Log.d(LOG_TAG, "mMap.getCameraPosition() = " +  alarmItem.get(2).getlatitude() );
+       // Log.d(LOG_TAG, "mMap.getCameraPosition() = " +  alarmItem.get(2).getlatitude() );
     /*    LatLngBounds AUSTRALIA;
-
-
-
-
 
         mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(AUSTRALIA, 0));
 */
      //
 
+      //    mMap.moveCamera(CameraUpdateFactory.newLatLng(myLoc));
+     //   mMap.animateCamera(CameraUpdateFactory.zoomTo(12));
 
 
 
-          mMap.moveCamera(CameraUpdateFactory.newLatLng(myLoc));
-        mMap.animateCamera(CameraUpdateFactory.zoomTo(12));
-
-/*
-        LatLngBounds.Builder builder = new LatLngBounds.Builder();
-
-
-       ArrayList<Marker> markers = new ArrayList<Marker>();
-        for(int i=0;  i < alarmItem.size(); i++) {
-            alarmItem.get(i).getName();
-            LatLng latLng = new LatLng(alarmItem.get(i).getlatitude(), alarmItem.get(i).getLongitude());
-           Marker  marker = new Marker(latLng);
-            markers.add(i, marker);
-
-        }
-
-
-        for (Marker marker : markers) {
-            builder.include(marker.getPosition());
-        }
-        LatLngBounds bounds = builder.build();
-*/
 
 
 
@@ -623,12 +644,108 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         //  mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
     }
 
+
+
+
+
+    public  void moveMapCamera() {
+        Log.d(LOG_TAG, " LatLngBounds.Builder builder = " );
+        LatLngBounds.Builder builder = new LatLngBounds.Builder();
+
+        ArrayList<MarkerOptions> markers = new ArrayList<MarkerOptions>();
+        for(int i=0;  i < myApplication.alarmItem.size(); i++) {
+            LatLng latLng = new LatLng(myApplication.alarmItem.get(i).getlatitude(), myApplication.alarmItem.get(i).getLongitude());
+            MarkerOptions  marker = (new MarkerOptions().position(latLng));
+            markers.add(marker);
+        }
+        if(myLoc!= null) {
+            markers.add(new MarkerOptions().position(myLoc));
+        }
+
+        for (MarkerOptions marker : markers) {
+            builder.include(marker.getPosition());
+        }
+        LatLngBounds bounds = builder.build();
+        int padding = 70; // offset from edges of the map in pixels
+        mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, padding));
+    }
+
+    public void drawLine() {
+
+      //  boolean allmarker = true;
+
+       if (polylineArrayList.size()>0) {
+
+           for (Polyline polyline : polylineArrayList) {
+              polyline.remove();
+           }
+
+       }
+        if (circleArrayList.size()>0) {
+            for (Circle circle : circleArrayList) {
+                circle.remove();
+            }
+        }
+
+        LatLngBounds.Builder builder = new LatLngBounds.Builder();
+        ArrayList<MarkerOptions> markers = new ArrayList<MarkerOptions>();
+
+        for(int j=0;  j < myApplication.alarmItem.size(); j++) {
+
+            if (myApplication.alarmItem.get(j).getRun()) {
+
+                PolylineOptions rectOptions = new PolylineOptions()
+                        .add(new LatLng(MyApplication.alarmItem.get(j).getlatitude(), MyApplication.alarmItem.get(j).getLongitude()))
+                        .add(new LatLng(MyApplication.lat, MyApplication.lng))
+                        .color(Color.BLUE)
+                        .width(4);
+
+                polylineArrayList.add(mMap.addPolyline(rectOptions));
+
+                // String radius = sp.getString(getResources().getString(R.string.radius), "100");
+                int radius = Integer.parseInt(sp.getString(getResources().getString(R.string.radius), "100"));
+
+                CircleOptions circleOptions = new CircleOptions()
+                        .center(new LatLng(MyApplication.alarmItem.get(j).getlatitude(), MyApplication.alarmItem.get(j).getLongitude()))
+                        .radius(radius)
+                        .fillColor(Color.argb(40, 255, 0, 0))
+                        .strokeWidth(1)
+                        .strokeColor(Color.argb(0, 0, 0, 0));
+
+                circleArrayList.add(mMap.addCircle(circleOptions));
+
+              //  circle = mMap.addCircle(circleOptions);
+
+                LatLng latLng = new LatLng(myApplication.alarmItem.get(j).getlatitude(), myApplication.alarmItem.get(j).getLongitude());
+                MarkerOptions marker = (new MarkerOptions().position(latLng));
+                markers.add(marker);
+
+            }
+        }
+        if(markers.size()<1) {
+            for(int j=0;  j < myApplication.alarmItem.size(); j++) {
+                LatLng latLng = new LatLng(myApplication.alarmItem.get(j).getlatitude(), myApplication.alarmItem.get(j).getLongitude());
+                MarkerOptions marker = (new MarkerOptions().position(latLng));
+                markers.add(marker);
+            }
+        }
+
+        markers.add(new MarkerOptions().position(new LatLng(MyApplication.lat, MyApplication.lng)));
+        for (MarkerOptions marker1 : markers) {
+            builder.include(marker1.getPosition());
+        }
+        LatLngBounds bounds = builder.build();
+        int padding = 60; // offset from edges of the map in pixels
+        mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, padding));
+
+    }
+
+
     public void updateMap() {
         mMap.clear();
-        for(int i=0;  i < alarmItem.size(); i++) {
-            alarmItem.get(i).getName();
-            LatLng latLng = new LatLng(alarmItem.get(i).getlatitude(), alarmItem.get(i).getLongitude());
-            marker = new MarkerOptions().position(latLng).title(alarmItem.get(i).getName());
+        for(int i=0;  i < myApplication.alarmItem.size(); i++) {
+            LatLng latLng = new LatLng(myApplication.alarmItem.get(i).getlatitude(), myApplication.alarmItem.get(i).getLongitude());
+            marker = new MarkerOptions().position(latLng).title(myApplication.alarmItem.get(i).getName());
             mMap.addMarker(marker);
         }
     }
@@ -709,16 +826,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mapView.onResume();
 
             if(myService!= null) {
-                String radius = sp.getString("example_list", "100");
-                String uri = sp.getString("notifications_new_message_ringtone", "content://settings/system/notification_sound");
-                boolean vibro = sp.getBoolean("notifications_new_message_vibrate", true);
+                String radius = sp.getString(getResources().getString(R.string.radius), "100");
                 int r = Integer.parseInt(radius);
-                myService.setRadius(r, uri, vibro);
+                myService.setRadius(r);
             }
-
-
-
-
     }
 
 
@@ -740,7 +851,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mapView.onDestroy();
     }
 
-
+/*
     public Action getIndexApiAction() {
         Thing object = new Thing.Builder()
                 .setName("Main Page") // TODO: Define a title for the content shown.
@@ -752,66 +863,56 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 .setActionStatus(Action.STATUS_TYPE_COMPLETED)
                 .build();
     }
-
+*/
     @Override
     public void onStart() {
-        super.onStart();
+        super.onStart();// ATTENTION: This was auto-generated to implement the App Indexing API.
+// See https://g.co/AppIndexing/AndroidStudio for more information.
+        mGoogleApiClient.connect();
         Log.d(LOG_TAG, "onStart");
      /*   mGoogleApiClient.connect();
         AppIndex.AppIndexApi.start(mGoogleApiClient, getIndexApiAction());
 */
         Intent intent = new Intent(this, MyService.class);
         bindService(intent, connection, 0); //Context.BIND_AUTO_CREATE
-        if(!getdistanceStart) getDistance();
+        if (!getdistanceStart) getDistance();
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        AppIndex.AppIndexApi.start(mGoogleApiClient, getIndexApiAction0());
     }
 
     @Override
     public void onStop() {
-        super.onStop();
+        super.onStop();// ATTENTION: This was auto-generated to implement the App Indexing API.
+// See https://g.co/AppIndexing/AndroidStudio for more information.
+        AppIndex.AppIndexApi.end(mGoogleApiClient, getIndexApiAction0());
         Log.d(LOG_TAG, "onStop");
         handler.removeCallbacks(runnableUpdateAdapter);
         writeSharePreferences();
-        getdistanceStart=false;
-       // stopService(new Intent(this, MyService.class));
-        // ATTENTION: This was auto-generated to implement the App Indexing API.
-        // See https://g.co/AppIndexing/AndroidStudio for more information.
-        /*
-        AppIndex.AppIndexApi.end(mGoogleApiClient, getIndexApiAction());
-        mGoogleApiClient.disconnect();
-        */
+        getdistanceStart = false;
 
-        if(bound) {
+        if (bound) {
             myService.setStopSelf(true);
             Log.d(LOG_TAG, "onStop bound = " + bound);
             unbindService(connection);
-            bound=false;
+            bound = false;
 
         }
-        /*
-        if( myService.getStopSelf()) {
-            Log.d(LOG_TAG, "делам стоп в методе активити онСтоп");
-            stopService(new Intent(this, MyService.class));
 
-        }
-*/
-
+        mGoogleApiClient.disconnect();
     }
 
 
-
-/*
-    @Override
-    public void onLocationChanged(Location location) {
-     //   Log.d(LOG_TAG, "Слушатель местоположения)");
-        debug++;
-        tvdebug.setText("" + debug + " " + location.getSpeed());
-        if(markerLoc!= null) {
-            float[] res = new float[3];
-            Location.distanceBetween(markerLoc.latitude, markerLoc.longitude, location.getLatitude(), location.getLongitude(), res);
-            // Log.d(LOG_TAG, "расстояние0: " + res[0]);
-          //  tvkm.setText("" + convertDistance(res[0]));
-        }
-
+    public Action getIndexApiAction0() {
+        Thing object = new Thing.Builder()
+                .setName("Main Page") // TODO: Define a title for the content shown.
+                // TODO: Make sure this auto-generated URL is correct.
+                .setUrl(Uri.parse("http://[ENTER-YOUR-URL-HERE]"))
+                .build();
+        return new Action.Builder(Action.TYPE_VIEW)
+                .setObject(object)
+                .setActionStatus(Action.STATUS_TYPE_COMPLETED)
+                .build();
     }
-    */
+
 }
