@@ -2,7 +2,11 @@ package com.mark.qpsaralmclock.gpsaralmclock;
 
 
 import android.Manifest;
+import android.animation.Animator;
+import android.animation.AnimatorSet;
+import android.animation.ValueAnimator;
 import android.annotation.TargetApi;
+import android.app.ActionBar;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.ComponentName;
@@ -37,9 +41,11 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.transition.AutoTransition;
 import android.transition.ChangeBounds;
+import android.transition.ChangeClipBounds;
 import android.transition.ChangeImageTransform;
 import android.transition.Fade;
 import android.transition.Scene;
+import android.transition.Transition;
 import android.transition.TransitionManager;
 import android.transition.TransitionSet;
 import android.util.Log;
@@ -48,6 +54,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.Animation;
 import android.view.animation.LinearInterpolator;
@@ -84,7 +91,7 @@ import java.util.concurrent.TimeUnit;
 import static android.R.attr.id;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener, View.OnClickListener, NewPointDialog.OnCompleteListener{
+        GoogleApiClient.OnConnectionFailedListener, NewPointDialog.OnCompleteListener{
 
     public final static int MODE_MY_LOCATION = 0;
     public final static int MODE_RUN_ALARMCLOCK= 1;
@@ -138,7 +145,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private Runnable runnableUpdateAdapter;
     private SharedPreferences sp;
     private SharedPreferences sPref;
-    int heightMap;
+
 
     MyApplication myApplication;
 
@@ -146,7 +153,18 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     //Polyline polyline;
     ArrayList<Polyline> polylineArrayList = new ArrayList<Polyline>();
     ArrayList<Circle> circleArrayList = new ArrayList<Circle>();
+
+    private  TextView tvchoisePoint;
+    private ViewGroup sceneRoot;
+    private View cardview1;
+    private ViewGroup.LayoutParams params;
+    private LinearLayout.LayoutParams paramsLinear;
     private RelativeLayout.LayoutParams lParams;
+    private FrameLayout.LayoutParams lParams2;
+    private LinearLayout linLayoutConteiner;
+    int heightMap;
+    int heightScreen;
+
 
 
     @Override
@@ -186,28 +204,21 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mapView.getMapAsync(this);
         mapView.onCreate(savedInstanceState);
 
-      //  tvName = (TextView) findViewById(R.id.tvname);
-      //  tvkm = (TextView) findViewById(R.id.tvkm);
-      //  tvdebug = (TextView) findViewById(R.id.tvdebug);
-
-      //  imgstart = (ImageView) findViewById(R.id.imgstart);
-     //   imgdelete = (ImageView) findViewById(R.id.imgdelete);
-     //   imgstart.setOnClickListener(this);
+        linLayoutConteiner = (LinearLayout) findViewById(R.id.linlayoutConteiner);
 
         linLayout = (LinearLayout) findViewById(R.id.lilayout);
         cardview = (CardView) findViewById(R.id.cardView);
 
-        lParams = (RelativeLayout.LayoutParams) cardview.getLayoutParams();
+     //   lParams = (RelativeLayout.LayoutParams) cardview.getLayoutParams();
+//        lParams2 = (FrameLayout.LayoutParams) cardview.getLayoutParams();
+
        // lParams.height = RecyclerView.LayoutParams.MATCH_PARENT;
        // lParams.height = cardview.getHeight();
-        heightMap = lParams.height;
+
 //        Log.d(LOG_TAG, "высота карты =" + lParams.height);
-
-
-
+        tvchoisePoint = (TextView) findViewById(R.id.tvchoisepoint);
 
         rv = (RecyclerView) findViewById(R.id.rv);
-
 
         adapter = new RvAdapter(myApplication.alarmItem);
         rv.setAdapter(adapter);
@@ -235,7 +246,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
       //  Intent i = new Intent();
        // PendingIntent pi = createPendingResult(1, i, 0);
 
-
       //  bindService(new Intent(this, MyService.class).putExtra(PARAM_PINTENT, pi).putExtra(MODE_SERVICE, MODE_MY_LOCATION));
         readDatabase();
 
@@ -246,6 +256,15 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         //  Intent intent = new Intent(this, MapsActivity.class);
         //  startActivity(intent);
+      //  sceneRoot = (ViewGroup) findViewById(R.id.framelayout);
+       // cardview1 =  sceneRoot.findViewById(R.id.cardView);
+      //  params = cardview.getLayoutParams();
+
+      //  lParams2 = (FrameLayout.LayoutParams) sceneRoot.getLayoutParams();
+      //  heightMap = params.height;
+      //  heightScreen = lParams2.height;
+     //   Log.d(LOG_TAG, "высота карты =" + heightMap);
+      //  Log.d(LOG_TAG, "высота экроана =" + heightScreen);
 
     }
 
@@ -377,29 +396,108 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     private void animationMap() {
 
-        ViewGroup sceneRoot = (ViewGroup) findViewById(R.id.content_main);
-        //  View cardview =  sceneRoot.findViewById(R.id.cardView);
+       // ViewGroup sceneRoot = (ViewGroup) findViewById(R.id.content_main);
+     //   ViewGroup sceneRoot = (ViewGroup) findViewById(R.id.container);
+     //     View cardview =  sceneRoot.findViewById(R.id.cardView);
 
+      //  ViewGroup.LayoutParams params1 = sceneRoot.getLayoutParams();
+
+        //  params.width = newSquareSize;
+        //  params.height = RecyclerView.LayoutParams.MATCH_PARENT;
+       //ViewGroup sceneRoot = (ViewGroup) findViewById(R.id.linlayoutConteiner);
+      //  ViewGroup.LayoutParams params1 = sceneRoot.getLayoutParams();
+       // Log.d(LOG_TAG, "высота экроана0 =" + sceneRoot.getLayoutParams().height);
+      //  heightScreen = params1.height;
+      //  Log.d(LOG_TAG, "высота экроана2 =" + heightScreen);
+     //   params = cardview.getLayoutParams();
+        //LinearLayout.LayoutParams l = (LinearLayout.LayoutParams) cardview.getLayoutParams();
+        paramsLinear = (LinearLayout.LayoutParams) cardview.getLayoutParams();
+        Log.d(LOG_TAG, "высота экроана2 " + paramsLinear.weight);
+       // heightMap= params.height;
+        //heightMap =paramsLinear.weight;
+
+        tvchoisePoint.setVisibility(View.VISIBLE);
+
+        linLayoutConteiner.animate()
+                .setDuration(300)
+                .setStartDelay(200)
+                .translationYBy(50)
+        .setListener(new Animator.AnimatorListener() {
+            @Override
+            public void onAnimationStart(Animator animator) {
+
+            }
+
+            @Override
+            public void onAnimationEnd(Animator animator) {
+                ValueAnimator slideAnimator = ValueAnimator
+                        .ofFloat(1.1f, 0.05f)
+                        .setDuration(400);
+                //rv.setVisibility(View.GONE);
+
+
+                slideAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                    @Override
+                    public void onAnimationUpdate(ValueAnimator animation) {
+                        Float value = (Float) animation.getAnimatedValue();
+                        // I'm going to set the layout's height 1:1 to the tick
+                        //  params.height = FrameLayout.LayoutParams.MATCH_PARENT;
+                        paramsLinear.weight = value.floatValue();
+                        //   value.intValue();
+                        cardview.requestLayout();
+                    }
+                });
+
+                AnimatorSet set = new AnimatorSet();
+                set.play(slideAnimator);
+                set.setInterpolator(new AccelerateDecelerateInterpolator());
+                set.start();
+            }
+
+            @Override
+            public void onAnimationCancel(Animator animator) {
+
+            }
+
+            @Override
+            public void onAnimationRepeat(Animator animator) {
+
+            }
+        });
+
+
+/*
+        cardview.animate()
+                .setDuration(2000)
+        .y(20);
+
+        params.height = heightMap;
+
+        cardview.setLayoutParams(params);
+        */
+/*
         TransitionSet set = new TransitionSet();
-        set.addTransition(new ChangeBounds());
-        // set.addTransition(new ChangeImageTransform());
-        // set.addTransition(new Fade());
 
+        // set.addTransition(new ChangeImageTransform());
+         set.addTransition(new Fade());
+        Fade а = new Fade(Fade.IN);
+        set.addTransition(new ChangeBounds());
         // выполняться они будут одновременно
-        set.setOrdering(TransitionSet.ORDERING_TOGETHER);
+        set.setOrdering(TransitionSet.ORDERING_SEQUENTIAL);
         // уставим свою длительность анимации
-        set.setDuration(500);
-        set.setStartDelay(500);
+        set.setDuration(200);
+        set.setStartDelay(100);
 
         TransitionManager.beginDelayedTransition(sceneRoot, set);
 
         // и применим сами изменения
-        ViewGroup.LayoutParams params = cardview.getLayoutParams();
+      //  ViewGroup.LayoutParams params = cardview.getLayoutParams();
         //  params.width = newSquareSize;
-        params.height = RecyclerView.LayoutParams.MATCH_PARENT;
+      //  params.height = RecyclerView.LayoutParams.MATCH_PARENT;
+        params.height = heightMap*2;
 
-        cardview.setLayoutParams(params);
-
+        cardview1.setLayoutParams(params);
+*/
 
     }
 
@@ -407,32 +505,127 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     private void animationMap2() {
 
-        ViewGroup sceneRoot = (ViewGroup) findViewById(R.id.content_main);
-      //  View cardview =  sceneRoot.findViewById(R.id.cardView);
 
+
+
+        linLayoutConteiner.animate()
+                .setDuration(400)
+                .setStartDelay(100)
+                .translationYBy(-50)
+        .setListener(new Animator.AnimatorListener() {
+            @Override
+            public void onAnimationStart(Animator animator) {
+                Log.d(LOG_TAG, "onAnimationStart");
+            }
+
+            @Override
+            public void onAnimationEnd(Animator animator) {
+                Log.d(LOG_TAG, "onAnimationEnd");
+               // rv.setVisibility(View.VISIBLE);
+                tvchoisePoint.setVisibility(View.GONE);
+
+                ValueAnimator slideAnimator = ValueAnimator
+                        .ofFloat(0.1f, 1f)
+                        .setDuration(300);
+                slideAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                    @Override
+                    public void onAnimationUpdate(ValueAnimator animation) {
+                        // get the value the interpolator is at
+                        Float value = (Float) animation.getAnimatedValue();
+                        // I'm going to set the layout's height 1:1 to the tick
+                        paramsLinear.weight = value.floatValue();
+                        //   value.intValue();
+                        // force all layouts to see which ones are affected by
+                        // this layouts height change
+                        cardview.requestLayout();
+                    }
+                });
+
+                AnimatorSet set = new AnimatorSet();
+// since this is the only animation we are going to run we just use
+// play
+                set.play(slideAnimator);
+// this is how you set the parabola which controls acceleration
+                set.setInterpolator(new AccelerateDecelerateInterpolator());
+// start the animation
+                set.start();
+
+            }
+
+            @Override
+            public void onAnimationCancel(Animator animator) {
+
+            }
+
+            @Override
+            public void onAnimationRepeat(Animator animator) {
+
+            }
+        });
+
+
+
+
+
+// create a new animationset
+
+
+     //   ViewGroup sceneRoot = (ViewGroup) findViewById(R.id.content_main);
+   //     ViewGroup sceneRoot = (ViewGroup) findViewById(R.id.container);
+   //     View cardview =  sceneRoot.findViewById(R.id.cardView);
+   //     AnimatorSet set1 = new AnimatorSet();
+/*
         TransitionSet set = new TransitionSet();
 
+        set.setDuration(500);
+        set.setStartDelay(1000);
 
-        set.addTransition(new Fade());
        // set.addTransition(new ChangeImageTransform());
         set.addTransition(new ChangeBounds());
-        set.addTransition(new AutoTransition());
-
-
+       // set.addTransition(new AutoTransition());
+      //  set.addTransition(new ChangeClipBounds());
+        set.addTransition(new Fade());
 
         // выполняться они будут одновременно
         set.setOrdering(TransitionSet.ORDERING_SEQUENTIAL);
         // уставим свою длительность анимации
-        set.setDuration(500);
-        set.setStartDelay(500);
-        TransitionManager.beginDelayedTransition(sceneRoot, set);
 
+     //   TransitionManager.go(sceneRoot, set);
+        set.addListener(new Transition.TransitionListener() {
+            @Override
+            public void onTransitionStart(Transition transition) {
+                Log.d(LOG_TAG, "onTransitionStart ");
+
+            }
+
+            @Override
+            public void onTransitionEnd(Transition transition) {
+                Log.d(LOG_TAG, "onTransitionEnd ");
+            }
+
+            @Override
+            public void onTransitionCancel(Transition transition) {
+                Log.d(LOG_TAG, "onTransitionCancel ");
+            }
+
+            @Override
+            public void onTransitionPause(Transition transition) {
+                Log.d(LOG_TAG, "onTransitionPause ");
+            }
+
+            @Override
+            public void onTransitionResume(Transition transition) {
+                Log.d(LOG_TAG, "onTransitionResume ");
+            }
+        });
+
+        TransitionManager.beginDelayedTransition(sceneRoot, set);
         // и применим сами изменения
-        ViewGroup.LayoutParams params = cardview.getLayoutParams();
+      //  ViewGroup.LayoutParams params = cardview.getLayoutParams();
         //  params.width = newSquareSize;
         params.height = heightMap;
-        cardview.setLayoutParams(params);
-
+        cardview1.setLayoutParams(params);
+*/
     }
 
 // новая точка для будильника, запись в базу
@@ -481,7 +674,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                   //  Log.d(LOG_TAG, "getDistance  = " + myService.getDistance());
             //        myService.setAlarmItem(alarmItem);
                     adapter.notifyDataSetChanged();
-                   if(!choisePoint) drawLine();
+                  if(!choisePoint) drawLine();
                 }
                 handler.postDelayed(this, timeout);
             }
@@ -496,35 +689,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         super.onActivityResult(requestCode, resultCode, data);
         Log.d(LOG_TAG, "onActivityResult requestCode = " + requestCode + ", resultCode = "
                 + resultCode);
-    }
-
-
-    @Override
-    public void onClick(View view) {
-        switch (view.getId()) {
-            case R.id.imgstart:
-                if (start_stop) {
-                    if(markerLoc!=null) {
-                        start_stop = false;
-                      //  imgstart.setImageResource(R.drawable.mr_ic_pause_light);
-                        Intent i = new Intent();
-                        PendingIntent pi = createPendingResult(1, i, 0);
-                        startService(new Intent(this, MyService.class).putExtra(PARAM_PINTENT, pi).putExtra(LAT_LONG, markerLoc).putExtra(MODE_SERVICE, MODE_RUN_ALARMCLOCK));
-                        linLayout.setBackgroundColor(Color.argb(255, 76, 175, 80));
-                    }
-                } else {
-                    start_stop = true;
-                  //  imgstart.setImageResource(R.drawable.mr_ic_play_light);
-                    linLayout.setBackgroundColor(Color.argb(255, 229, 115, 115));
-                    stopService(new Intent(this, MyService.class));
-                }
-
-
-                break;
-            case R.id.imgdelete:
-                break;
-        }
-
     }
 
     @Override
@@ -736,7 +900,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
         LatLngBounds bounds = builder.build();
         int padding = 60; // offset from edges of the map in pixels
-        mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, padding));
+        if(mMap!= null) {
+            mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, padding));
+        }
+        else  {
+
+        }
 
     }
 
