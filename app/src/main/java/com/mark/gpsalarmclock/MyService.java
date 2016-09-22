@@ -1,4 +1,4 @@
-package com.mark.qpsaralmclock.gpsaralmclock;
+package com.mark.gpsalarmclock;
 
 import android.app.AlarmManager;
 import android.app.Notification;
@@ -27,6 +27,7 @@ import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.model.LatLng;
+import com.mark.qpsaralmclock.gpsaralmclock.R;
 
 public class MyService extends Service implements LocationListener, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
 

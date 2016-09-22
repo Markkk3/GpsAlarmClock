@@ -1,14 +1,15 @@
-package com.mark.qpsaralmclock.gpsaralmclock;
+package com.mark.gpsalarmclock;
 
 import android.app.Activity;
 import android.app.Dialog;
 import android.app.DialogFragment;
-import android.app.FragmentManager;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.view.View;
 import android.widget.EditText;
+
+import com.mark.qpsaralmclock.gpsaralmclock.R;
 
 
 public class NewPointDialog extends DialogFragment implements DialogInterface.OnClickListener {

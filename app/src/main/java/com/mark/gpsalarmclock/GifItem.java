@@ -1,4 +1,4 @@
-package com.mark.qpsaralmclock.gpsaralmclock;
+package com.mark.gpsalarmclock;
 
 
 public class GifItem {

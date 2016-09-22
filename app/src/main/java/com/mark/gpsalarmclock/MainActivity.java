@@ -1,4 +1,4 @@
-package com.mark.qpsaralmclock.gpsaralmclock;
+package com.mark.gpsalarmclock;
 
 
 import android.Manifest;
@@ -6,12 +6,8 @@ import android.animation.Animator;
 import android.animation.AnimatorSet;
 import android.animation.ValueAnimator;
 import android.annotation.TargetApi;
-import android.app.ActionBar;
-import android.app.PendingIntent;
-import android.app.Service;
 import android.content.ComponentName;
 import android.content.ContentValues;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.ServiceConnection;
@@ -19,13 +15,10 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
-import android.graphics.Matrix;
-import android.location.Location;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.os.Vibrator;
 import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
@@ -39,26 +32,12 @@ import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.transition.AutoTransition;
-import android.transition.ChangeBounds;
-import android.transition.ChangeClipBounds;
-import android.transition.ChangeImageTransform;
-import android.transition.Fade;
-import android.transition.Scene;
-import android.transition.Transition;
-import android.transition.TransitionManager;
-import android.transition.TransitionSet;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.WindowManager;
 import android.view.animation.AccelerateDecelerateInterpolator;
-import android.view.animation.AccelerateInterpolator;
-import android.view.animation.Animation;
-import android.view.animation.LinearInterpolator;
-import android.view.animation.Transformation;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
@@ -71,7 +50,6 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
@@ -80,13 +58,12 @@ import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
-import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.mark.qpsaralmclock.gpsaralmclock.R;
 
 import java.util.ArrayList;
-import java.util.concurrent.TimeUnit;
 
 import static android.R.attr.id;
 
@@ -209,18 +186,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         linLayout = (LinearLayout) findViewById(R.id.lilayout);
         cardview = (CardView) findViewById(R.id.cardView);
 
-     //   lParams = (RelativeLayout.LayoutParams) cardview.getLayoutParams();
-//        lParams2 = (FrameLayout.LayoutParams) cardview.getLayoutParams();
-
-       // lParams.height = RecyclerView.LayoutParams.MATCH_PARENT;
-       // lParams.height = cardview.getHeight();
-
-//        Log.d(LOG_TAG, "высота карты =" + lParams.height);
         tvchoisePoint = (TextView) findViewById(R.id.tvchoisepoint);
 
         rv = (RecyclerView) findViewById(R.id.rv);
 
-        adapter = new RvAdapter(myApplication.alarmItem);
+        adapter = new RvAdapter(MyApplication.alarmItem);
         rv.setAdapter(adapter);
 //        rv.notify();
         //  mMap.addMarker(marker);
@@ -317,10 +287,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 null, null,
                 null, null, null) ;
        // alarmItem.clear();
-        int size = myApplication.alarmItem.size();
+        int size = MyApplication.alarmItem.size();
         if(size>0) {
             Log.d(LOG_TAG, "очищаем myApplication.alarmItem");
-            myApplication.alarmItem.clear();
+            MyApplication.alarmItem.clear();
         }
 
 
@@ -331,7 +301,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             float longitude = cursor.getFloat(cursor.getColumnIndex(DatabaseHelper.LONGITUDE_COLUMN));
             Boolean run = (cursor.getInt(cursor.getColumnIndex(DatabaseHelper.RUN)) == 1);
 
-            myApplication.alarmItem.add(new GifItem(Name, latitude, longitude, id, run));
+            MyApplication.alarmItem.add(new GifItem(Name, latitude, longitude, id, run));
 
             Log.d(LOG_TAG, "id=" + id +" Name =" + Name + " longitude =" + longitude + " latitude =" + latitude);
         }
@@ -351,7 +321,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         db = dbHelper.getWritableDatabase();
         int delCount = db.delete(DatabaseHelper.DATABASE_TABLE, "id = " + id, null);
         Log.d(LOG_TAG, "deleted rows count = " + delCount);
-        myApplication.alarmItem.remove(i);
+        MyApplication.alarmItem.remove(i);
         adapter.notifyDataSetChanged();
         updateMap();
 
@@ -640,7 +610,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         // Вставляем данные в таблицу
         db.insert("locations", null, values);
-        myApplication.alarmItem.add(new GifItem(name,  (float) latitude, (float) longitude, id, false));
+        MyApplication.alarmItem.add(new GifItem(name,  (float) latitude, (float) longitude, id, false));
         adapter.notifyDataSetChanged();
         db.close();
     }
@@ -674,7 +644,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                   //  Log.d(LOG_TAG, "getDistance  = " + myService.getDistance());
             //        myService.setAlarmItem(alarmItem);
                     adapter.notifyDataSetChanged();
-                  if(!choisePoint) drawLine();
+                  if(!choisePoint) drawLine(false);
                 }
                 handler.postDelayed(this, timeout);
             }
@@ -817,8 +787,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         LatLngBounds.Builder builder = new LatLngBounds.Builder();
 
         ArrayList<MarkerOptions> markers = new ArrayList<MarkerOptions>();
-        for(int i=0;  i < myApplication.alarmItem.size(); i++) {
-            LatLng latLng = new LatLng(myApplication.alarmItem.get(i).getlatitude(), myApplication.alarmItem.get(i).getLongitude());
+        for(int i = 0; i < MyApplication.alarmItem.size(); i++) {
+            LatLng latLng = new LatLng(MyApplication.alarmItem.get(i).getlatitude(), MyApplication.alarmItem.get(i).getLongitude());
             MarkerOptions  marker = (new MarkerOptions().position(latLng));
             markers.add(marker);
         }
@@ -834,7 +804,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, padding));
     }
 
-    public void drawLine() {
+    public void drawLine(boolean updateline) {
 
       //  boolean allmarker = true;
 
@@ -845,7 +815,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
            }
 
        }
-        if (circleArrayList.size()>0) {
+
+        if (circleArrayList.size()>0 && updateline) { // для того чтобы круг не перерисовывался
             for (Circle circle : circleArrayList) {
                 circle.remove();
             }
@@ -854,9 +825,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         LatLngBounds.Builder builder = new LatLngBounds.Builder();
         ArrayList<MarkerOptions> markers = new ArrayList<MarkerOptions>();
 
-        for(int j=0;  j < myApplication.alarmItem.size(); j++) {
+        for(int j = 0; j < MyApplication.alarmItem.size(); j++) {
 
-            if (myApplication.alarmItem.get(j).getRun()) {
+            if (MyApplication.alarmItem.get(j).getRun()) {
 
                 PolylineOptions rectOptions = new PolylineOptions()
                         .add(new LatLng(MyApplication.alarmItem.get(j).getlatitude(), MyApplication.alarmItem.get(j).getLongitude()))
@@ -864,31 +835,37 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                         .color(Color.BLUE)
                         .width(4);
 
-                polylineArrayList.add(mMap.addPolyline(rectOptions));
+
+
+                 if(polylineArrayList != null)   polylineArrayList.add(mMap.addPolyline(rectOptions));
+
 
                 // String radius = sp.getString(getResources().getString(R.string.radius), "100");
                 int radius = Integer.parseInt(sp.getString(getResources().getString(R.string.radius), "100"));
 
-                CircleOptions circleOptions = new CircleOptions()
-                        .center(new LatLng(MyApplication.alarmItem.get(j).getlatitude(), MyApplication.alarmItem.get(j).getLongitude()))
-                        .radius(radius)
-                        .fillColor(Color.argb(40, 255, 0, 0))
-                        .strokeWidth(1)
-                        .strokeColor(Color.argb(0, 0, 0, 0));
+                if(updateline) {
+                    CircleOptions circleOptions = new CircleOptions()
+                            .center(new LatLng(MyApplication.alarmItem.get(j).getlatitude(), MyApplication.alarmItem.get(j).getLongitude()))
+                            .radius(radius)
+                            .fillColor(Color.argb(40, 255, 0, 0))
+                            .strokeWidth(1)
+                            .strokeColor(Color.argb(0, 0, 0, 0));
 
-                circleArrayList.add(mMap.addCircle(circleOptions));
+                    if(circleArrayList != null) circleArrayList.add(mMap.addCircle(circleOptions));
+                }
+
 
               //  circle = mMap.addCircle(circleOptions);
 
-                LatLng latLng = new LatLng(myApplication.alarmItem.get(j).getlatitude(), myApplication.alarmItem.get(j).getLongitude());
+                LatLng latLng = new LatLng(MyApplication.alarmItem.get(j).getlatitude(), MyApplication.alarmItem.get(j).getLongitude());
                 MarkerOptions marker = (new MarkerOptions().position(latLng));
                 markers.add(marker);
 
             }
         }
         if(markers.size()<1) {
-            for(int j=0;  j < myApplication.alarmItem.size(); j++) {
-                LatLng latLng = new LatLng(myApplication.alarmItem.get(j).getlatitude(), myApplication.alarmItem.get(j).getLongitude());
+            for(int j = 0; j < MyApplication.alarmItem.size(); j++) {
+                LatLng latLng = new LatLng(MyApplication.alarmItem.get(j).getlatitude(), MyApplication.alarmItem.get(j).getLongitude());
                 MarkerOptions marker = (new MarkerOptions().position(latLng));
                 markers.add(marker);
             }
@@ -912,9 +889,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     public void updateMap() {
         mMap.clear();
-        for(int i=0;  i < myApplication.alarmItem.size(); i++) {
-            LatLng latLng = new LatLng(myApplication.alarmItem.get(i).getlatitude(), myApplication.alarmItem.get(i).getLongitude());
-            marker = new MarkerOptions().position(latLng).title(myApplication.alarmItem.get(i).getName());
+        for(int i = 0; i < MyApplication.alarmItem.size(); i++) {
+            LatLng latLng = new LatLng(MyApplication.alarmItem.get(i).getlatitude(), MyApplication.alarmItem.get(i).getLongitude());
+            marker = new MarkerOptions().position(latLng).title(MyApplication.alarmItem.get(i).getName());
             mMap.addMarker(marker);
         }
     }
@@ -998,6 +975,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 String radius = sp.getString(getResources().getString(R.string.radius), "100");
                 int r = Integer.parseInt(radius);
                 myService.setRadius(r);
+                drawLine(true); //после обновления настроект перерисовываем круг
             }
     }
 
@@ -1020,19 +998,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mapView.onDestroy();
     }
 
-/*
-    public Action getIndexApiAction() {
-        Thing object = new Thing.Builder()
-                .setName("Main Page") // TODO: Define a title for the content shown.
-                // TODO: Make sure this auto-generated URL is correct.
-                .setUrl(Uri.parse("http://[ENTER-YOUR-URL-HERE]"))
-                .build();
-        return new Action.Builder(Action.TYPE_VIEW)
-                .setObject(object)
-                .setActionStatus(Action.STATUS_TYPE_COMPLETED)
-                .build();
-    }
-*/
     @Override
     public void onStart() {
         super.onStart();// ATTENTION: This was auto-generated to implement the App Indexing API.
@@ -1043,7 +1008,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         AppIndex.AppIndexApi.start(mGoogleApiClient, getIndexApiAction());
 */
         Intent intent = new Intent(this, MyService.class);
+
         bindService(intent, connection, 0); //Context.BIND_AUTO_CREATE
+
+
         if (!getdistanceStart) getDistance();
         // ATTENTION: This was auto-generated to implement the App Indexing API.
         // See https://g.co/AppIndexing/AndroidStudio for more information.

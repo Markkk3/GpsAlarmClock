@@ -1,4 +1,4 @@
-package com.mark.qpsaralmclock.gpsaralmclock;
+package com.mark.gpsalarmclock;
 
 import android.graphics.Color;
 import android.support.v7.widget.CardView;
@@ -12,7 +12,7 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.google.android.gms.ads.internal.overlay.zzo;
+import com.mark.qpsaralmclock.gpsaralmclock.R;
 
 import java.util.ArrayList;
 
@@ -31,7 +31,7 @@ public class RvAdapter extends RecyclerView.Adapter<RvAdapter.ViewHolder> {
         View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.item, parent, false);
         ViewHolder vh = new ViewHolder(v);
         main = (MainActivity) parent.getContext();
-        main.drawLine();
+        main.drawLine(true);
         Log.d(LOG_TAG, "Адаптер onCreateViewHolder ");
         return vh;
     }
@@ -120,7 +120,7 @@ public class RvAdapter extends RecyclerView.Adapter<RvAdapter.ViewHolder> {
 
                         imgstart.setImageResource(R.drawable.mr_ic_play_light);
                     }
-                    main.drawLine();
+                    main.drawLine(true);
 
                 }
             });

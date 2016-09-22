@@ -1,4 +1,4 @@
-package com.mark.qpsaralmclock.gpsaralmclock;
+package com.mark.gpsalarmclock;
 
 import android.content.res.Configuration;
 import android.os.Bundle;
