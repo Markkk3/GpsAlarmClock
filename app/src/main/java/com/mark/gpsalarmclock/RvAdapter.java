@@ -1,5 +1,6 @@
 package com.mark.gpsalarmclock;
 
+import android.content.res.Resources;
 import android.graphics.Color;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
@@ -47,10 +48,10 @@ public class RvAdapter extends RecyclerView.Adapter<RvAdapter.ViewHolder> {
         holder.tvKm.setText(main.convertDistance(currentGif.getDistance()));
 
         if(objects.get(position).getRun()) {
-            holder.linlayout.setBackgroundColor(Color.argb(255, 76, 175, 80));
+            holder.linlayout.setBackgroundColor(main.getResources().getColor(R.color.colorOnAlarm));
             holder.imgstart.setImageResource(R.drawable.mr_ic_pause_light);
         } else  {
-            holder.linlayout.setBackgroundColor(Color.argb(255, 229, 115, 115));
+            holder.linlayout.setBackgroundColor(main.getResources().getColor(R.color.colorOffAlarm));
             holder.imgstart.setImageResource(R.drawable.mr_ic_play_light);
         }
 
@@ -102,9 +103,8 @@ public class RvAdapter extends RecyclerView.Adapter<RvAdapter.ViewHolder> {
                 @Override
                 public void onClick(View view) {
                     Log.d(LOG_TAG, "Кликнули на play: " + getAdapterPosition());
-
                     if(!objects.get(getAdapterPosition()).getRun()) {
-                        linlayout.setBackgroundColor(Color.argb(255, 76, 175, 80));
+                        linlayout.setBackgroundColor(main.getResources().getColor(R.color.colorOnAlarm));
                         main.saveRun(1, objects.get(getAdapterPosition()).getId());
                       //  main.runAlarm(objects.get(getAdapterPosition()).getId(), getAdapterPosition());
                         objects.get(getAdapterPosition()).setRun(true);
@@ -113,7 +113,7 @@ public class RvAdapter extends RecyclerView.Adapter<RvAdapter.ViewHolder> {
 
                     }
                     else {
-                        linlayout.setBackgroundColor(Color.argb(255, 229, 115, 115));
+                        linlayout.setBackgroundColor(main.getResources().getColor(R.color.colorOffAlarm));
                         main.saveRun(0, objects.get(getAdapterPosition()).getId());
                         objects.get(getAdapterPosition()).setRun(false);
                       //  main.getMyService().notificationCancel();

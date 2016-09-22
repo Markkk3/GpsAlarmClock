@@ -8,6 +8,7 @@ import android.animation.ValueAnimator;
 import android.annotation.TargetApi;
 import android.content.ComponentName;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.ServiceConnection;
@@ -24,20 +25,24 @@ import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
+import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.view.ViewCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.util.AttributeSet;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AccelerateDecelerateInterpolator;
+import android.view.animation.LinearInterpolator;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
@@ -54,6 +59,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
@@ -162,6 +168,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
        // int clearCount = db.delete(DatabaseHelper.DATABASE_TABLE, null, null);
       //  Log.d(LOG_TAG, "deleted rows count = " + clearCount);
 
+      //  FAB_Float_on_Scroll fab = (FAB_Float_on_Scroll) findViewById(R.id.fab) ;
+
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -237,6 +245,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
       //  Log.d(LOG_TAG, "высота экроана =" + heightScreen);
 
     }
+
 
     private  void readSharePreferences() {
         sPref = getPreferences(MODE_PRIVATE);
@@ -389,7 +398,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         tvchoisePoint.setVisibility(View.VISIBLE);
 
         linLayoutConteiner.animate()
-                .setDuration(300)
+                .setDuration(200)
                 .setStartDelay(200)
                 .translationYBy(50)
         .setListener(new Animator.AnimatorListener() {
@@ -402,7 +411,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             public void onAnimationEnd(Animator animator) {
                 ValueAnimator slideAnimator = ValueAnimator
                         .ofFloat(1.1f, 0.05f)
-                        .setDuration(400);
+                        .setDuration(300);
                 //rv.setVisibility(View.GONE);
 
 
@@ -479,7 +488,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
 
         linLayoutConteiner.animate()
-                .setDuration(400)
+                .setDuration(200)
                 .setStartDelay(100)
                 .translationYBy(-50)
         .setListener(new Animator.AnimatorListener() {
@@ -711,7 +720,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                 if(choisePoint) {
                     //markerLoc = latLng;
-                    marker = new MarkerOptions().position(latLng).title(currentNamePoint);
+                    marker = new MarkerOptions()
+                            .position(latLng)
+                            .title(currentNamePoint)
+                            .icon(BitmapDescriptorFactory.fromResource(R.mipmap.map_marker1));
                     mMap.addMarker(marker);
                     newPoint(currentNamePoint, latLng.latitude, latLng.longitude);
                     choisePoint = false;
@@ -729,53 +741,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
 
         updateMap();
-       // Log.d(LOG_TAG, "mMap.getCameraPosition() = " +  alarmItem.get(2).getlatitude() );
-    /*    LatLngBounds AUSTRALIA;
 
-        mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(AUSTRALIA, 0));
-*/
-     //
-
-      //    mMap.moveCamera(CameraUpdateFactory.newLatLng(myLoc));
-     //   mMap.animateCamera(CameraUpdateFactory.zoomTo(12));
-
-
-
-
-
-
-     //  LatLngBounds AUSTRALIA = new LatLngBounds(
-     //           new LatLng(alarmItem.get(2).getlatitude(), alarmItem.get(2).getLongitude()), new LatLng(54, 28));
-
-     //   LatLngBounds AUSTRALIA = new LatLngBounds(
-     //           new LatLng(53, 27), new LatLng(54, 28));
-
-       //  mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(AUSTRALIA, 0));
-     //  LatLngBounds AUSTRALIA = new LatLngBounds(
-      //          new LatLng(-44, 113), new LatLng(-10, 154));
-
-// Set the camera to the greatest possible zoom level that includes the
-// bounds
-    //    mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(AUSTRALIA, 0));
-
-
-
-
-
-        /*
-        for(int i=0;  i < alarmItem.size(); i++) {
-            alarmItem.get(i).getName();
-            LatLng latLng = new LatLng(alarmItem.get(i).getlatitude(), alarmItem.get(i).getLongitude());
-            marker = new MarkerOptions().position(latLng).title(alarmItem.get(i).getName());
-            mMap.addMarker(marker);
-        }
-
-*/
-
-        // Add a marker in Sydney and move the camera
-        //  LatLng sydney = new LatLng(-34, 151);
-        //  mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
-        //  mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
     }
 
 
@@ -837,7 +803,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
 
 
-                 if(polylineArrayList != null)   polylineArrayList.add(mMap.addPolyline(rectOptions));
+                 if(polylineArrayList != null && mMap != null)   polylineArrayList.add(mMap.addPolyline(rectOptions));
 
 
                 // String radius = sp.getString(getResources().getString(R.string.radius), "100");
@@ -891,7 +857,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mMap.clear();
         for(int i = 0; i < MyApplication.alarmItem.size(); i++) {
             LatLng latLng = new LatLng(MyApplication.alarmItem.get(i).getlatitude(), MyApplication.alarmItem.get(i).getLongitude());
-            marker = new MarkerOptions().position(latLng).title(MyApplication.alarmItem.get(i).getName());
+            marker = new MarkerOptions().position(latLng)
+                    .title(MyApplication.alarmItem.get(i).getName())
+                    .icon(BitmapDescriptorFactory.fromResource(R.mipmap.map_marker1));
             mMap.addMarker(marker);
         }
     }
@@ -1007,7 +975,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
      /*   mGoogleApiClient.connect();
         AppIndex.AppIndexApi.start(mGoogleApiClient, getIndexApiAction());
 */
-        Intent intent = new Intent(this, MyService.class);
+       // Intent intent = new Intent(this, MyService.class);
 
         bindService(intent, connection, 0); //Context.BIND_AUTO_CREATE
 
@@ -1029,8 +997,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         getdistanceStart = false;
 
         if (bound) {
-            myService.setStopSelf(true);
             Log.d(LOG_TAG, "onStop bound = " + bound);
+            myService.setStopSelf(true);
+            Log.d(LOG_TAG, "onStopmyService.setStopSelf(true)" );
             unbindService(connection);
             bound = false;
 
