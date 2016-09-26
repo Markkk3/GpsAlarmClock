@@ -63,4 +63,5 @@
 
     <string name="pref_title_vibrate">Vibrate</string>
     <string name="radius">radius</string>
+    <string name="title_activity_maps2">Map</string>
 </resources>

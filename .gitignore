@@ -7,3 +7,6 @@
 /build
 /captures
 .externalNativeBuild
+/editor.xml
+/find.xml
+/inspection/Default.xml

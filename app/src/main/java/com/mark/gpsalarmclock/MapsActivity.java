@@ -9,7 +9,8 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.mark.qpsaralmclock.gpsaralmclock.R;
+import com.mark.qpsalarmclock.R;
+
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 

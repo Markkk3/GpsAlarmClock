@@ -13,7 +13,8 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.mark.qpsaralmclock.gpsaralmclock.R;
+
+import com.mark.qpsalarmclock.R;
 
 import java.util.ArrayList;
 

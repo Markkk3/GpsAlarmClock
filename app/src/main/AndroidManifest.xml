@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.mark.qpsaralmclock.gpsaralmclock">
+    package="com.mark.qpsalarmclock">
 
     <!--
          The ACCESS_COARSE/FINE_LOCATION permissions are not required to use
@@ -13,10 +13,10 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <application
+        android:name="com.mark.gpsalarmclock.MyApplication"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        android:name="com.mark.gpsalarmclock.MyApplication"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
@@ -38,10 +38,18 @@
              sign the APK for publishing.
              You can define the keys for the debug and release targets in src/debug/ and src/release/. 
         -->
+
+
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="@string/google_maps_key" />
 
+        <!--
+        <meta-data
+
+            android:name="com.google.android.maps.v2.API_KEY"
+            android:value="@string/google_maps_key"/>
+        -->
         <activity
             android:name="com.mark.gpsalarmclock.MapsActivity"
             android:label="@string/title_activity_maps" />
@@ -58,15 +66,15 @@
             android:enabled="true"
             android:exported="false" />
 
-
         <activity
             android:name="com.mark.gpsalarmclock.SettingsActivity"
             android:label="@string/title_activity_settings" />
-
         <activity
             android:name="com.mark.gpsalarmclock.AlarmActivity"
-            android:screenOrientation="portrait"/>
-
+            android:screenOrientation="portrait" />
+        <activity
+            android:name="com.mark.gpsalarmclock.MapsActivity2"
+            android:label="@string/title_activity_maps2"></activity>
     </application>
 
 </manifest>

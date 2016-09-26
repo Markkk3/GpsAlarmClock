@@ -67,7 +67,7 @@ import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
-import com.mark.qpsaralmclock.gpsaralmclock.R;
+import com.mark.qpsalarmclock.R;
 
 import java.util.ArrayList;
 
@@ -226,6 +226,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
       //  bindService(new Intent(this, MyService.class).putExtra(PARAM_PINTENT, pi).putExtra(MODE_SERVICE, MODE_MY_LOCATION));
         readDatabase();
+
 
         startService(new Intent(this, MyService.class));
 
@@ -963,7 +964,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public void onDestroy() {
         super.onDestroy();
-        mapView.onDestroy();
+    //    mapView.onDestroy();
     }
 
     @Override

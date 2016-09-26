@@ -20,7 +20,8 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.MenuItem;
 
-import com.mark.qpsaralmclock.gpsaralmclock.R;
+
+import com.mark.qpsalarmclock.R;
 
 import java.util.List;
 

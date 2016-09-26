@@ -9,7 +9,7 @@ import android.support.v7.app.AlertDialog;
 import android.view.View;
 import android.widget.EditText;
 
-import com.mark.qpsaralmclock.gpsaralmclock.R;
+import com.mark.qpsalarmclock.R;
 
 
 public class NewPointDialog extends DialogFragment implements DialogInterface.OnClickListener {

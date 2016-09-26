@@ -19,7 +19,8 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.Toast;
 
-import com.mark.qpsaralmclock.gpsaralmclock.R;
+
+import com.mark.qpsalarmclock.R;
 
 import java.util.concurrent.TimeUnit;
 
