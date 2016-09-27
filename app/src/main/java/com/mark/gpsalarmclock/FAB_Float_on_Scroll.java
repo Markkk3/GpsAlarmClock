@@ -25,8 +25,8 @@ public class FAB_Float_on_Scroll extends FloatingActionButton.Behavior {
      //   Log.d(LOG_TAG, "coordinatorLayout " + coordinatorLayout);
        // Log.d(LOG_TAG, "child " + child);
        // Log.d(LOG_TAG, "AonNestedScroll " + target.get);
-     //   Log.d(LOG_TAG, "dxConsume " + dxConsumed + " y= " + dyConsumed);
-      //  Log.d(LOG_TAG, "dxUnconsumed " + dxUnconsumed + "y " + dyUnconsumed);
+      //  Log.d(LOG_TAG, "dxConsume " + dxConsumed + " y= " + dyConsumed);
+     //   Log.d(LOG_TAG, "dxUnconsumed " + dxUnconsumed + "y " + dyUnconsumed);
         //child -> Floating Action Button
         if (dyConsumed > 0) {
             CoordinatorLayout.LayoutParams layoutParams = (CoordinatorLayout.LayoutParams) child.getLayoutParams();
@@ -40,6 +40,14 @@ public class FAB_Float_on_Scroll extends FloatingActionButton.Behavior {
             //    Log.d(LOG_TAG, "open" );
                 child.animate().translationY(0).setInterpolator(new LinearInterpolator()).start();
 
+            }
+            else  {
+                if(dyConsumed == 0 && dyUnconsumed > 0) {
+                //    Log.d(LOG_TAG, "hide" );
+                    CoordinatorLayout.LayoutParams layoutParams = (CoordinatorLayout.LayoutParams) child.getLayoutParams();
+                    int fab_bottomMargin = layoutParams.bottomMargin;
+                    child.animate().translationY(child.getHeight() + fab_bottomMargin).setInterpolator(new LinearInterpolator()).start();
+                }
             }
         }
     }

@@ -17,8 +17,16 @@ public class GifItem {
         longitude = longit;
         id = id1;
         run= r;
-
     }
+
+    public void update(String n, float lat, float longit, int id1, boolean r) {
+        name = n;
+        latitude = lat;
+        longitude = longit;
+        id = id1;
+        run= r;
+    }
+
 
     public float getlatitude() {
         return  latitude;

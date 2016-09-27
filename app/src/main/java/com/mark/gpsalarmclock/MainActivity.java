@@ -16,6 +16,7 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
+import android.location.Location;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -111,6 +112,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     boolean zoomMap = true;
     boolean getdistanceStart = false;
 
+    boolean openSetting = false;
+
     String currentNamePoint="";
 
     //Service myservice;
@@ -176,7 +179,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             public void onClick(View view) {
              //   Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
               //          .setAction("Action", null).show();
-
                 new NewPointDialog().show(getFragmentManager(),
                         "login");
 
@@ -291,6 +293,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private void readDatabase() {
         Log.d(LOG_TAG, "readDatabase");
         db = dbHelper.getWritableDatabase();
+       // int sizeAlarm = 0;
+        int i = 0;
 
         Cursor cursor = db.query("locations", new String[] {DatabaseHelper.ID,DatabaseHelper.NAME_COLUMN, DatabaseHelper.RUN,
                         DatabaseHelper.LATITUDE_COLUMN, DatabaseHelper.LONGITUDE_COLUMN},
@@ -299,7 +303,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
        // alarmItem.clear();
         int size = MyApplication.alarmItem.size();
         if(size>0) {
-            Log.d(LOG_TAG, "очищаем myApplication.alarmItem");
+            Log.d(LOG_TAG, "очищаем myApplication.alarmItem = " +  size);
             MyApplication.alarmItem.clear();
         }
 
@@ -311,31 +315,73 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             float longitude = cursor.getFloat(cursor.getColumnIndex(DatabaseHelper.LONGITUDE_COLUMN));
             Boolean run = (cursor.getInt(cursor.getColumnIndex(DatabaseHelper.RUN)) == 1);
 
-            MyApplication.alarmItem.add(new GifItem(Name, latitude, longitude, id, run));
 
-            Log.d(LOG_TAG, "id=" + id +" Name =" + Name + " longitude =" + longitude + " latitude =" + latitude);
+                MyApplication.alarmItem.add(i, new GifItem(Name, latitude, longitude, id, run));
+
+/*
+            if(i<size) {
+                MyApplication.alarmItem.get(i).update(Name, latitude, longitude, id, run);
+            }
+            else {
+                MyApplication.alarmItem.add(i, new GifItem(Name, latitude, longitude, id, run));
+            }
+*/
+            Log.d(LOG_TAG, "i=" + i + " id=" + id +" Name =" + Name + " longitude =" + longitude + " latitude =" + latitude);
+
+            float[] res = new float[3];
+            Location.distanceBetween(latitude, longitude, MyApplication.lat, MyApplication.lng, res);
+
+            MyApplication.alarmItem.get(i).setDistance(res[0]);
+            i++;
         }
+        /*
+        for( ; i<size; i++) {
+            Log.d(LOG_TAG, "удаляем i=" + i);
+            MyApplication.alarmItem.remove(i);
+
+        }
+        */
         // не забываем закрывать курсор
         cursor.close();
         db.close();
 
         adapter.notifyDataSetChanged();
+       if(mMap!=null) updateMap();
+
+
 
     }
 
 //удаление будильника
-    public void deleteItem(int id, int i) {
+    public void deleteItem(final int id, final int i) {
 
         Log.d(LOG_TAG, "deleteItem i =" + i);
 
-        db = dbHelper.getWritableDatabase();
-        int delCount = db.delete(DatabaseHelper.DATABASE_TABLE, "id = " + id, null);
-        Log.d(LOG_TAG, "deleted rows count = " + delCount);
-        MyApplication.alarmItem.remove(i);
-        adapter.notifyDataSetChanged();
-        updateMap();
+        final Handler h2 = new Handler() {
+            public void handleMessage(android.os.Message msg) {
+                Log.d(LOG_TAG, "обновляем адаптер = ");
+              //  adapter.notifyDataSetChanged();
+              //  updateMap();
+                readDatabase();
+            };
+        };
 
-        db.close();
+        Thread t = new Thread(new Runnable() {
+            public void run() {
+                db = dbHelper.getWritableDatabase();
+                int delCount = db.delete(DatabaseHelper.DATABASE_TABLE, "id = " + id, null);
+                Log.d(LOG_TAG, "deleted rows count = " + delCount);
+                db.close();
+                    h2.sendEmptyMessage(0);
+                MyApplication.alarmItem.remove(i);
+            }
+        });
+        t.start();
+      //  readDatabase();
+       //
+      //  adapter.notifyDataSetChanged();
+
+
     }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
@@ -484,9 +530,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     private void animationMap2() {
-
-
-
 
         linLayoutConteiner.animate()
                 .setDuration(200)
@@ -687,6 +730,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+            openSetting = true;
             Intent intent = new Intent(this, SettingsActivity.class);
             startActivity(intent);
             return true;
@@ -763,12 +807,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             markers.add(new MarkerOptions().position(myLoc));
         }
 
-        for (MarkerOptions marker : markers) {
-            builder.include(marker.getPosition());
+        if(markers.size()>1) {
+            for (MarkerOptions marker : markers) {
+                builder.include(marker.getPosition());
+            }
+            LatLngBounds bounds = builder.build();
+            int padding = 70; // offset from edges of the map in pixels
+            mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, padding));
         }
-        LatLngBounds bounds = builder.build();
-        int padding = 70; // offset from edges of the map in pixels
-        mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, padding));
     }
 
     public void drawLine(boolean updateline) {
@@ -837,18 +883,18 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 markers.add(marker);
             }
         }
+        if(markers.size()>1) {
+            markers.add(new MarkerOptions().position(new LatLng(MyApplication.lat, MyApplication.lng)));
+            for (MarkerOptions marker1 : markers) {
+                builder.include(marker1.getPosition());
+            }
+            LatLngBounds bounds = builder.build();
+            int padding = 60; // offset from edges of the map in pixels
+            if (mMap != null) {
+                mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, padding));
+            } else {
 
-        markers.add(new MarkerOptions().position(new LatLng(MyApplication.lat, MyApplication.lng)));
-        for (MarkerOptions marker1 : markers) {
-            builder.include(marker1.getPosition());
-        }
-        LatLngBounds bounds = builder.build();
-        int padding = 60; // offset from edges of the map in pixels
-        if(mMap!= null) {
-            mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, padding));
-        }
-        else  {
-
+            }
         }
 
     }
@@ -937,6 +983,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void onResume() {
 
         Log.d(LOG_TAG, "onResume()" );
+        openSetting = false;
         super.onResume();
         mapView.onResume();
 
@@ -964,6 +1011,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public void onDestroy() {
         super.onDestroy();
+
     //    mapView.onDestroy();
     }
 
@@ -999,6 +1047,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         if (bound) {
             Log.d(LOG_TAG, "onStop bound = " + bound);
+            if(!openSetting)
             myService.setStopSelf(true);
             Log.d(LOG_TAG, "onStopmyService.setStopSelf(true)" );
             unbindService(connection);
