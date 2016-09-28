@@ -1,16 +1,19 @@
 package com.mark.gpsalarmclock;
 
+import android.Manifest;
 import android.app.AlarmManager;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Binder;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -29,35 +32,40 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.model.LatLng;
 import com.mark.qpsalarmclock.R;
 
-public class MyService extends Service implements LocationListener, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
+public class MyService extends Service implements LocationListener, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener{
 
     final String LOG_TAG = "myLogs";
     GoogleApiClient mGoogleApiClient;
     LocationRequest mLocationRequest;
     PendingIntent pi;
-    LatLng markerLoc =  null;
-    int t=5;
+    LatLng markerLoc = null;
+    int t = 5;
     NotificationCompat.Builder builder;
     Notification notification = null;
     private NotificationManagerCompat notificationManager;
-    int MODE=0;
-    float radius =100;
+    int MODE = 0;
+    float radius = 100;
     Uri uri;
+    boolean notifyVisible;
 
     private final IBinder binder = new MyServiceBinder();
     private PendingIntent pendongIntent;
-  //  ArrayList<GifItem> alarmItem = new ArrayList<GifItem>();
+    //  ArrayList<GifItem> alarmItem = new ArrayList<GifItem>();
     private String stringUri = "content://settings/system/notification_sound";
     private boolean vibroEnable;
     private boolean stopself = false;
-    public  boolean runalarm = false;
+    public boolean runalarm = false;
+    private boolean signalLost = false; // если сигнал потерян
     private MyApplication myApplication;
+    private Handler handler1;
+    private Runnable runnableUpdateAdapter1;
 
 
     public MyService() {
     }
 
     public void setStopSelf(boolean stopSelf) {
+        Log.d(LOG_TAG, "MyS setStopSelf" + stopSelf);
         stopself = stopSelf;
     }
 
@@ -75,7 +83,7 @@ public class MyService extends Service implements LocationListener, GoogleApiCli
     public IBinder onBind(Intent intent) {
         // TODO: Return the communication channel to the service.
         Log.d(LOG_TAG, "MyService onBind");
-    //    throw new UnsupportedOperationException("Not yet implemented");
+        //    throw new UnsupportedOperationException("Not yet implemented");
         return binder;
     }
 
@@ -85,24 +93,117 @@ public class MyService extends Service implements LocationListener, GoogleApiCli
 
     }
 
+    public void checkSignal() {
+
+        handler1 = new Handler();
+
+        runnableUpdateAdapter1 = new Runnable() {
+            @Override
+            public void run() {
+                Log.d(LOG_TAG, "MyS checkSignal()");
+                Log.d(LOG_TAG, "MyS hashcode = " + handler1.hashCode());
+
+                //     Log.d(LOG_TAG, "run"+ timeout);
+                if (ActivityCompat.checkSelfPermission(MyService.this, Manifest.permission.ACCESS_FINE_LOCATION) !=
+                        PackageManager.PERMISSION_GRANTED &&
+                        ActivityCompat.checkSelfPermission(MyService.this, Manifest.permission.ACCESS_COARSE_LOCATION) !=
+                                PackageManager.PERMISSION_GRANTED) {
+                    Log.d(LOG_TAG, "нет разрешений");
+
+                    return;
+                }
+                if(LocationServices.FusedLocationApi.getLocationAvailability(mGoogleApiClient) != null) {
+                    if (!LocationServices.FusedLocationApi.getLocationAvailability(mGoogleApiClient).isLocationAvailable()) {
+                        Log.d(LOG_TAG, "getLocationAvailability -false");
+                        seachLocation();
+                    }
+                    else {
+                        signalLost = false;
+                    }
+                }
+                if(stopself) {
+                    Log.d(LOG_TAG, "stopself = " +  true);
+                    handler1.removeCallbacks(runnableUpdateAdapter1);
+
+                }
+
+                handler1.postDelayed(this, 10000);
+            }
+        };
+        handler1.post(runnableUpdateAdapter1);
+        // handler.removeCallbacks(runnableUpdateAdapter);
+    }
+
+
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.d(LOG_TAG, "MyS onStartCommand" + startId);
-
+        Log.d(LOG_TAG, "MyS onStartCommand там " + startId);
+//        handler1.removeCallbacks(runnableUpdateAdapter1);
         myApplication = (MyApplication) getApplicationContext();
 
         if (mGoogleApiClient == null) {
             mGoogleApiClient = new GoogleApiClient.Builder(this)
                     .addConnectionCallbacks(this)
-                    .addOnConnectionFailedListener(this)
+                 //   .addOnConnectionFailedListener(MyService.this)
+                    .addOnConnectionFailedListener(new GoogleApiClient.OnConnectionFailedListener() {
+                        @Override
+                        public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+                            Log.d(LOG_TAG, "mGoogleApiClient !!! onConnectionFailed" +  connectionResult);
+                        }
+                    })
                     .addApi(LocationServices.API)
                     .addApi(AppIndex.API).build();
         }
         mGoogleApiClient.connect();
+        /*
+        mGoogleApiClient.registerConnectionFailedListener(new GoogleApiClient.OnConnectionFailedListener() {
+            @Override
+            public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+                Log.d(LOG_TAG, "mGoogleApiClient !!! onConnectionFailed");
+            }
+        });
+*/
+        Log.d(LOG_TAG, "mGoogleApiClient.isConnected =" + mGoogleApiClient.isConnected());
         createLocationRequest();
+        checkSignal();
+
 
         return super.onStartCommand(intent, flags, startId);
     }
+
+    public void checkConnection() {
+        Log.d(LOG_TAG, "Check mGoogleApiClient.isConnected =" + mGoogleApiClient.isConnected());
+        if (!mGoogleApiClient.isConnected()) {
+            mGoogleApiClient.connect();
+            createLocationRequest();
+
+        }
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) !=
+                PackageManager.PERMISSION_GRANTED && ActivityCompat
+                    .checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) !=
+                PackageManager.PERMISSION_GRANTED) {
+
+            return;
+        }
+      //  Log.d(LOG_TAG, "getLocationAvailability - " );
+        if(LocationServices.FusedLocationApi.getLocationAvailability(mGoogleApiClient).isLocationAvailable()) {
+            Log.d(LOG_TAG, "getLocationAvailability - true" );
+            signalLost=false;
+        }
+        else {
+            Log.d(LOG_TAG, "getLocationAvailability - false" );
+            seachLocation();
+        }
+
+
+    }
+
+    public void seachLocation() {
+        signalLost = true;
+        notificationSet(0, true, signalLost);
+
+    }
+
 
     /*
     public ArrayList<GifItem> getAlarmItem() {
@@ -121,7 +222,9 @@ public class MyService extends Service implements LocationListener, GoogleApiCli
     public void onDestroy() {
         super.onDestroy();
         Log.d(LOG_TAG, "MyS onDestroy");
+        handler1.removeCallbacks(runnableUpdateAdapter1);
         stopLocationUpdates();
+
 
         if(mGoogleApiClient!=  null) {
             mGoogleApiClient.disconnect();
@@ -146,7 +249,7 @@ public class MyService extends Service implements LocationListener, GoogleApiCli
         if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED && ActivityCompat.
                 checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-
+            Log.d(LOG_TAG, "startLocationUpdates проблемы ");
             return;
         }
         LocationServices.FusedLocationApi.requestLocationUpdates(
@@ -234,46 +337,60 @@ public class MyService extends Service implements LocationListener, GoogleApiCli
 
             }
 
-
     }
 
-        if(notifyVisible) {
 
-            Intent notificationIntent = new Intent(this, MainActivity.class);
+        notificationSet(mindistance, notifyVisible, signalLost);
 
-            notificationIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP
-                    | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-
-            PendingIntent contentIntent = PendingIntent.getActivity(this,
-                    0, notificationIntent,
-                    PendingIntent.FLAG_CANCEL_CURRENT);
-
-            NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
-// оставим только самое необходимое
-            builder.setContentIntent(contentIntent)
-                    .setSmallIcon(R.mipmap.ic_launcher)
-                    .setContentTitle(""+ convertDistance(mindistance))
-                    .setContentText("Расстояние до точки"); // Текст уведомления
-
-            Notification notification = builder.build();
-
-            notificationManager = NotificationManagerCompat.from(this);
-            notificationManager.notify(101, notification);
-        }
-        else {
-         //   stopself = true;
-             if (notificationManager!=null) {
-                 notificationManager.cancel(101);
-                 runalarm = false;
-             }
-
-        }
 
 
         // останавливаем поток
         if (stopself && !notifyVisible) {
             Log.d(LOG_TAG, "делаем stopself() " );
+            handler1.removeCallbacks(runnableUpdateAdapter1);
             stopSelf();
+        }
+
+    }
+
+    public void notificationSet(float mindistance, boolean notifyVisible, boolean signalLost) {
+        if(notifyVisible) {
+
+        Intent notificationIntent = new Intent(this, MainActivity.class);
+
+        notificationIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP
+                | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+
+        PendingIntent contentIntent = PendingIntent.getActivity(this,
+                0, notificationIntent,
+                PendingIntent.FLAG_CANCEL_CURRENT);
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
+// оставим только самое необходимое
+            if(!signalLost) {
+                builder.setContentIntent(contentIntent)
+                        .setSmallIcon(R.mipmap.ic_launcher)
+                        .setContentTitle("" + convertDistance(mindistance))
+                        .setContentText("Расстояние до точки"); // Текст уведомления
+            }
+            else {
+                builder.setContentIntent(contentIntent)
+                        .setSmallIcon(R.mipmap.ic_launcher)
+                        .setContentTitle("Ошибка")
+                        .setContentText("Местоположение не определено"); // Текст уведомления
+            }
+
+        Notification notification = builder.build();
+
+        notificationManager = NotificationManagerCompat.from(this);
+        notificationManager.notify(101, notification);
+    }
+    else {
+            //   stopself = true;
+            if (notificationManager != null) {
+                notificationManager.cancel(101);
+                runalarm = false;
+            }
         }
 
     }
@@ -318,9 +435,11 @@ public class MyService extends Service implements LocationListener, GoogleApiCli
         Log.d(LOG_TAG, "MyS onConnectionSuspended");
     }
 
+
+
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-        Log.d(LOG_TAG, "MyS onConnectionFaile");
+        Log.d(LOG_TAG, "!!! MyS onConnectionFaile");
     }
 
     private String convertDistance(float distance) {

@@ -91,7 +91,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     Handler handler;
     MapView mapView;
     private GoogleMap mMap;
-    GoogleApiClient mGoogleApiClient;
+ //   GoogleApiClient mGoogleApiClient;
     final String LOG_TAG = "myLogs";
     LatLng myLoc;
     LatLng markerLoc =  null;
@@ -210,7 +210,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         RecyclerView.ItemAnimator itemAnimator = new DefaultItemAnimator();
         rv.setItemAnimator(itemAnimator);
 
-
+/*
         if (mGoogleApiClient == null) {
             // ATTENTION: This "addApi(AppIndex.API)"was auto-generated to implement the App Indexing API.
             // See https://g.co/AppIndexing/AndroidStudio for more information.
@@ -220,7 +220,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     .addApi(LocationServices.API)
                     .addApi(AppIndex.API).build();
         }
-
+*/
         sp =PreferenceManager.getDefaultSharedPreferences(this);
 
       //  Intent i = new Intent();
@@ -355,7 +355,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 //удаление будильника
     public void deleteItem(final int id, final int i) {
 
-        Log.d(LOG_TAG, "deleteItem i =" + i);
+        Log.d(LOG_TAG, "deleteItem i =" + i  + "id = " + id);
 
         final Handler h2 = new Handler() {
             public void handleMessage(android.os.Message msg) {
@@ -373,7 +373,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 Log.d(LOG_TAG, "deleted rows count = " + delCount);
                 db.close();
                     h2.sendEmptyMessage(0);
-                MyApplication.alarmItem.remove(i);
+             //   MyApplication.alarmItem.remove(i);
             }
         });
         t.start();
@@ -663,9 +663,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         // Вставляем данные в таблицу
         db.insert("locations", null, values);
-        MyApplication.alarmItem.add(new GifItem(name,  (float) latitude, (float) longitude, id, false));
-        adapter.notifyDataSetChanged();
+     //   MyApplication.alarmItem.add(new GifItem(name,  (float) latitude, (float) longitude, id, false));
+     //   adapter.notifyDataSetChanged();
         db.close();
+        readDatabase();
+
     }
 
     public void saveRun(int r, int idd) {
@@ -696,6 +698,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     //   Log.d(LOG_TAG, "myService !=null getAlarmItem = " + myService.getAlarmItem().size());
                   //  Log.d(LOG_TAG, "getDistance  = " + myService.getDistance());
             //        myService.setAlarmItem(alarmItem);
+//                    myService.checkConnection();
                     adapter.notifyDataSetChanged();
                   if(!choisePoint) drawLine(false);
                 }
@@ -790,9 +793,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
 
-
-
-
     public  void moveMapCamera() {
         Log.d(LOG_TAG, " LatLngBounds.Builder builder = " );
         LatLngBounds.Builder builder = new LatLngBounds.Builder();
@@ -807,7 +807,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             markers.add(new MarkerOptions().position(myLoc));
         }
 
-        if(markers.size()>1) {
+        if(MyApplication.alarmItem.size()>0) {
             for (MarkerOptions marker : markers) {
                 builder.include(marker.getPosition());
             }
@@ -826,7 +826,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
            for (Polyline polyline : polylineArrayList) {
               polyline.remove();
            }
-
        }
 
         if (circleArrayList.size()>0 && updateline) { // для того чтобы круг не перерисовывался
@@ -883,7 +882,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 markers.add(marker);
             }
         }
-        if(markers.size()>1) {
+        if(MyApplication.alarmItem.size()>0) {
             markers.add(new MarkerOptions().position(new LatLng(MyApplication.lat, MyApplication.lng)));
             for (MarkerOptions marker1 : markers) {
                 builder.include(marker1.getPosition());
@@ -1012,6 +1011,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void onDestroy() {
         super.onDestroy();
 
+       // if(!openSetting)
+            myService.setStopSelf(true);
+        Log.d(LOG_TAG, "onDestroy");
+
     //    mapView.onDestroy();
     }
 
@@ -1019,27 +1022,27 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void onStart() {
         super.onStart();// ATTENTION: This was auto-generated to implement the App Indexing API.
 // See https://g.co/AppIndexing/AndroidStudio for more information.
-        mGoogleApiClient.connect();
+     //   mGoogleApiClient.connect();
         Log.d(LOG_TAG, "onStart");
      /*   mGoogleApiClient.connect();
         AppIndex.AppIndexApi.start(mGoogleApiClient, getIndexApiAction());
 */
        // Intent intent = new Intent(this, MyService.class);
 
-        bindService(intent, connection, 0); //Context.BIND_AUTO_CREATE
+        bindService(intent, connection, BIND_AUTO_CREATE); //Context.BIND_AUTO_CREATE
 
 
         if (!getdistanceStart) getDistance();
         // ATTENTION: This was auto-generated to implement the App Indexing API.
         // See https://g.co/AppIndexing/AndroidStudio for more information.
-        AppIndex.AppIndexApi.start(mGoogleApiClient, getIndexApiAction0());
+    //    AppIndex.AppIndexApi.start(mGoogleApiClient, getIndexApiAction0());
     }
 
     @Override
     public void onStop() {
         super.onStop();// ATTENTION: This was auto-generated to implement the App Indexing API.
 // See https://g.co/AppIndexing/AndroidStudio for more information.
-        AppIndex.AppIndexApi.end(mGoogleApiClient, getIndexApiAction0());
+      //  AppIndex.AppIndexApi.end(mGoogleApiClient, getIndexApiAction0());
         Log.d(LOG_TAG, "onStop");
         handler.removeCallbacks(runnableUpdateAdapter);
         writeSharePreferences();
@@ -1047,15 +1050,15 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         if (bound) {
             Log.d(LOG_TAG, "onStop bound = " + bound);
-            if(!openSetting)
-            myService.setStopSelf(true);
-            Log.d(LOG_TAG, "onStopmyService.setStopSelf(true)" );
+           // if(!openSetting)
+          //  myService.setStopSelf(true);
+           // Log.d(LOG_TAG, "onStopmyService.setStopSelf(true)" );
             unbindService(connection);
             bound = false;
 
         }
 
-        mGoogleApiClient.disconnect();
+     //   mGoogleApiClient.disconnect();
     }
 
 
