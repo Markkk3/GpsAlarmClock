@@ -11,6 +11,7 @@ public class MyApplication extends Application {
     public static ArrayList<GifItem> alarmItem;
     public static float lat;
     public static float lng;
+    public static Thread myThread;
 
     // Returns the application instance
     public static MyApplication getInstance() {
@@ -23,4 +24,6 @@ public class MyApplication extends Application {
 
         alarmItem = new ArrayList<GifItem>();
     }
+
+
 }
