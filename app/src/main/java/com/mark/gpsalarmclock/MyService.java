@@ -57,8 +57,9 @@ public class MyService extends Service implements LocationListener, GoogleApiCli
     public boolean runalarm = false;
     private boolean signalLost = false; // если сигнал потерян
     private MyApplication myApplication;
-    private Handler handler1;
+ //   private Handler handler1;
     private Runnable runnableUpdateAdapter1;
+   // private Thread myThread;
 
 
     public MyService() {
@@ -95,43 +96,88 @@ public class MyService extends Service implements LocationListener, GoogleApiCli
 
     public void checkSignal() {
 
+
+            MyApplication.myThread = new Thread( // создаём новый поток
+                    new Runnable() { // описываем объект Runnable в конструкторе
+                        public void run() {
+                            while (!Thread.currentThread().isInterrupted()) {
+                                Log.d(LOG_TAG, "поток работает");
+                                if (ActivityCompat.checkSelfPermission(MyService.this, Manifest.permission.ACCESS_FINE_LOCATION) !=
+                                        PackageManager.PERMISSION_GRANTED &&
+                                        ActivityCompat.checkSelfPermission(MyService.this, Manifest.permission.ACCESS_COARSE_LOCATION) !=
+                                                PackageManager.PERMISSION_GRANTED) {
+                                    Log.d(LOG_TAG, "нет разрешений");
+
+                                    return;
+                                }
+                                if (LocationServices.FusedLocationApi.getLocationAvailability(mGoogleApiClient) != null) {
+                                    if (!LocationServices.FusedLocationApi.getLocationAvailability(mGoogleApiClient).isLocationAvailable()) {
+                                        Log.d(LOG_TAG, "getLocationAvailability -false");
+                                        seachLocation();
+                                    } else {
+                                        signalLost = false;
+                                    }
+                                }
+
+                                try {
+                                    Thread.sleep(10000);
+                                } catch (InterruptedException e) {
+
+                                    return;
+                                }
+                            }
+
+
+                        }
+                    }
+            );
+
+            MyApplication.myThread.start();
+
+/*
         handler1 = new Handler();
 
         runnableUpdateAdapter1 = new Runnable() {
             @Override
             public void run() {
+                if(!stopself) {
                 Log.d(LOG_TAG, "MyS checkSignal()");
                 Log.d(LOG_TAG, "MyS hashcode = " + handler1.hashCode());
 
-                //     Log.d(LOG_TAG, "run"+ timeout);
-                if (ActivityCompat.checkSelfPermission(MyService.this, Manifest.permission.ACCESS_FINE_LOCATION) !=
-                        PackageManager.PERMISSION_GRANTED &&
-                        ActivityCompat.checkSelfPermission(MyService.this, Manifest.permission.ACCESS_COARSE_LOCATION) !=
-                                PackageManager.PERMISSION_GRANTED) {
-                    Log.d(LOG_TAG, "нет разрешений");
 
-                    return;
-                }
-                if(LocationServices.FusedLocationApi.getLocationAvailability(mGoogleApiClient) != null) {
-                    if (!LocationServices.FusedLocationApi.getLocationAvailability(mGoogleApiClient).isLocationAvailable()) {
-                        Log.d(LOG_TAG, "getLocationAvailability -false");
-                        seachLocation();
+                    //     Log.d(LOG_TAG, "run"+ timeout);
+                    if (ActivityCompat.checkSelfPermission(MyService.this, Manifest.permission.ACCESS_FINE_LOCATION) !=
+                            PackageManager.PERMISSION_GRANTED &&
+                            ActivityCompat.checkSelfPermission(MyService.this, Manifest.permission.ACCESS_COARSE_LOCATION) !=
+                                    PackageManager.PERMISSION_GRANTED) {
+                        Log.d(LOG_TAG, "нет разрешений");
+
+                        return;
                     }
-                    else {
-                        signalLost = false;
+                    if (LocationServices.FusedLocationApi.getLocationAvailability(mGoogleApiClient) != null) {
+                        if (!LocationServices.FusedLocationApi.getLocationAvailability(mGoogleApiClient).isLocationAvailable()) {
+                            Log.d(LOG_TAG, "getLocationAvailability -false");
+                            seachLocation();
+                        } else {
+                            signalLost = false;
+                        }
+                    }
+                    if (stopself) {
+                        Log.d(LOG_TAG, "stopself = " + true);
+                        handler1.removeCallbacks(runnableUpdateAdapter1);
                     }
                 }
-                if(stopself) {
-                    Log.d(LOG_TAG, "stopself = " +  true);
+                else  {
+                    Log.d(LOG_TAG, "else stopself = " + stopself);
                     handler1.removeCallbacks(runnableUpdateAdapter1);
-
                 }
 
                 handler1.postDelayed(this, 10000);
             }
         };
-        handler1.post(runnableUpdateAdapter1);
+       handler1.post(runnableUpdateAdapter1);
         // handler.removeCallbacks(runnableUpdateAdapter);
+        */
     }
 
 
@@ -165,7 +211,18 @@ public class MyService extends Service implements LocationListener, GoogleApiCli
 */
         Log.d(LOG_TAG, "mGoogleApiClient.isConnected =" + mGoogleApiClient.isConnected());
         createLocationRequest();
-        checkSignal();
+
+        if(MyApplication.myThread !=  null) {
+            Log.d(LOG_TAG, "MyApplication.myThread.isAlive();" + MyApplication.myThread.isAlive());
+            if(!MyApplication.myThread.isAlive()) {
+                checkSignal();
+            }
+        }
+        else {
+            Log.d(LOG_TAG, "MyApplication.myThread == null");
+            checkSignal();
+        }
+
 
 
         return super.onStartCommand(intent, flags, startId);
@@ -222,7 +279,11 @@ public class MyService extends Service implements LocationListener, GoogleApiCli
     public void onDestroy() {
         super.onDestroy();
         Log.d(LOG_TAG, "MyS onDestroy");
-        handler1.removeCallbacks(runnableUpdateAdapter1);
+
+
+
+        MyApplication.myThread.interrupt();
+        //handler1.removeCallbacks(runnableUpdateAdapter1);
         stopLocationUpdates();
 
 
@@ -347,7 +408,7 @@ public class MyService extends Service implements LocationListener, GoogleApiCli
         // останавливаем поток
         if (stopself && !notifyVisible) {
             Log.d(LOG_TAG, "делаем stopself() " );
-            handler1.removeCallbacks(runnableUpdateAdapter1);
+//            handler1.removeCallbacks(runnableUpdateAdapter1);
             stopSelf();
         }
 
