@@ -13,7 +13,6 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-
 import com.mark.qpsalarmclock.R;
 
 import java.util.ArrayList;
@@ -50,10 +49,10 @@ public class RvAdapter extends RecyclerView.Adapter<RvAdapter.ViewHolder> {
 
         if(objects.get(position).getRun()) {
             holder.linlayout.setBackgroundColor(main.getResources().getColor(R.color.colorOnAlarm));
-            holder.imgstart.setImageResource(R.drawable.mr_ic_pause_light);
+            holder.imgstart.setImageResource(R.mipmap.ic_stop_black_24dp);
         } else  {
             holder.linlayout.setBackgroundColor(main.getResources().getColor(R.color.colorOffAlarm));
-            holder.imgstart.setImageResource(R.drawable.mr_ic_play_light);
+            holder.imgstart.setImageResource(R.mipmap.ic_play_arrow_black_24dp);
         }
 
 
@@ -110,7 +109,7 @@ public class RvAdapter extends RecyclerView.Adapter<RvAdapter.ViewHolder> {
                       //  main.runAlarm(objects.get(getAdapterPosition()).getId(), getAdapterPosition());
                         objects.get(getAdapterPosition()).setRun(true);
                        // main.drawLine(getAdapterPosition());
-                        imgstart.setImageResource(R.drawable.mr_ic_pause_light);
+                        imgstart.setImageResource(R.mipmap.ic_stop_black_24dp);
 
                     }
                     else {
@@ -119,7 +118,7 @@ public class RvAdapter extends RecyclerView.Adapter<RvAdapter.ViewHolder> {
                         objects.get(getAdapterPosition()).setRun(false);
                       //  main.getMyService().notificationCancel();
 
-                        imgstart.setImageResource(R.drawable.mr_ic_play_light);
+                        imgstart.setImageResource(R.mipmap.ic_play_arrow_black_24dp);
                     }
                     main.drawLine(true);
 
