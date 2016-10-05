@@ -5,12 +5,11 @@ import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.view.ViewCompat;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.View;
 import android.view.animation.LinearInterpolator;
 
 
-public class FAB_Float_on_Scroll extends FloatingActionButton.Behavior {
+public class FAB_Float_on_Scroll extends  FloatingActionButton.Behavior {
     final String LOG_TAG = "myLogs";
 
 

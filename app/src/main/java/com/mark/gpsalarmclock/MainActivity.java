@@ -9,18 +9,17 @@ import android.annotation.TargetApi;
 import android.content.ComponentName;
 import android.content.ContentValues;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
 import android.location.Location;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.os.Handler;
+import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -39,13 +38,12 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AccelerateDecelerateInterpolator;
+import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-//import com.google.android.gms.appindexing.Action;
-//import com.google.android.gms.appindexing.Thing;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationRequest;
@@ -64,6 +62,9 @@ import com.google.android.gms.maps.model.PolylineOptions;
 import com.mark.qpsalarmclock.R;
 
 import java.util.ArrayList;
+
+//import com.google.android.gms.appindexing.Action;
+//import com.google.android.gms.appindexing.Thing;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener, NewPointDialog.OnCompleteListener{
@@ -139,9 +140,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private LinearLayout linLayoutConteiner;
     int heightMap;
     int heightScreen;
+    Button btnadd;
 
 
-
+    @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -174,6 +176,15 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             }
         });
+        fab.setVisibility(View.GONE);
+        btnadd = (Button) findViewById(R.id.btnadd);
+        btnadd.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                new NewPointDialog().show(getFragmentManager(),
+                        "login");
+            }
+        });
 
         //    createLocationRequest();
         mapView = (MapView) findViewById(R.id.mapView);
@@ -198,6 +209,19 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         RecyclerView.ItemAnimator itemAnimator = new DefaultItemAnimator();
         rv.setItemAnimator(itemAnimator);
+        rv.setOnScrollChangeListener(new View.OnScrollChangeListener() {
+            @Override
+            public void onScrollChange(View view, int i, int i1, int i2, int i3) {
+
+                 Log.d(LOG_TAG, "child " + i);
+                 Log.d(LOG_TAG, "AonNestedScroll1 " + i1);
+                 Log.d(LOG_TAG, "AonNestedScroll2 " + i2);
+                 Log.d(LOG_TAG, "AonNestedScroll3" + i3);
+                //  Log.d(LOG_TAG, "dxConsume " + dxConsumed + " y= " + dyConsumed);
+                //   Log.d(LOG_TAG, "dxUnconsumed " + dxUnconsumed + "y " + dyUnconsumed);
+                //child -> Floating Action Button
+            }
+        });
 
 /*
         if (mGoogleApiClient == null) {

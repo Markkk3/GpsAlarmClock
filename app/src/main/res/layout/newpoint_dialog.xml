@@ -1,16 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical" android:layout_width="match_parent"
+
     android:layout_height="match_parent">
 
 
 
     <EditText
         android:layout_width="match_parent"
+        android:layout_marginLeft="50dp"
+        android:layout_marginRight="50dp"
         android:layout_height="wrap_content"
         android:inputType="textPersonName"
+        android:textColor="@color/colortext"
+        android:shadowColor="@color/white"
+        android:textColorHint="#54e0e0e0"
+        android:textColorHighlight="@color/white"
+        android:textCursorDrawable="@null"
         android:layout_marginTop="15dp"
         android:hint="Name point"
+        android:backgroundTint="@color/white"
         android:ems="10"
         android:text="NwePoint"
         android:id="@+id/editText" />

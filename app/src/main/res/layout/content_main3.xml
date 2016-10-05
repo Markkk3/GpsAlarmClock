@@ -5,53 +5,91 @@
     android:id="@+id/content_main_pro"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingBottom="@dimen/activity_vertical_margin"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context="com.mark.gpsalarmclock.MapsActivity"
     tools:showIn="@layout/activity_main">
 
-    <TextView
-        android:text="Выберите точку на карте"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:visibility="invisible"
-        android:id="@+id/tvchoisepoint"/>
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:background="@drawable/text_line"
+        android:layout_height="50dp">
+
+        <TextView
+            android:text="Выберите точку на карте"
+            android:layout_width="match_parent"
+            android:layout_marginLeft="10dp"
+            android:textSize="20sp"
+            android:layout_height="wrap_content"
+            android:visibility="invisible"
+            android:textColor="@color/colortext"
+            android:id="@+id/tvchoisepoint"/>
+
+    </LinearLayout>
 
     <LinearLayout
         android:orientation="vertical"
         android:id="@+id/linlayoutConteiner"
+        android:layout_marginTop="5dp"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:layout_above="@+id/linarlayoutlayout">
 
         <android.support.v7.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_marginTop="2dp"
             android:layout_weight="1"
-            android:id="@+id/cardView"
-            android:elevation="1dp" >
+            android:id="@+id/cardView" >
 
             <com.google.android.gms.maps.MapView
                 xmlns:android="http://schemas.android.com/apk/res/android"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_margin="5dp"
                 android:id="@+id/mapView" />
 
         </android.support.v7.widget.CardView>
 
         <android.support.v7.widget.RecyclerView
-            android:paddingTop="10dp"
+            android:paddingTop="1dp"
             android:layout_weight="1"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:id="@+id/rv"
             />
 
+
     </LinearLayout>
 
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_above="@+id/linarlayoutlayout"
+        android:background="@drawable/gradient_transparent"
+        android:layout_height="20dp">
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/linarlayoutlayout"
+        android:orientation="vertical"
+        android:layout_alignParentBottom="true"
+        android:layout_width="match_parent"
+        android:gravity="center"
+        android:background="@color/colorPrimaryDark"
+        android:layout_height="wrap_content">
+
+        <Button
+            android:text="Добавить будильник"
+            android:layout_width="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_height="40dp"
+            android:gravity="center"
+            android:layout_gravity="center|bottom"
+            android:layout_marginBottom="5dp"
+            android:id="@+id/btnadd"
+            android:textSize="12sp"
+            android:textColor="@color/colortext"
+            android:background="@drawable/oval" />
+    </LinearLayout>
 
 </RelativeLayout>

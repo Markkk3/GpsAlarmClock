@@ -8,7 +8,8 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context="com.mark.qpsaralmclock.gpsaralmclock.com.mark.qpsaralmclock.gpsalarmclock.AlarmActivity">
+    android:background="@drawable/backgroundgradient"
+    tools:context="com.mark.gpsalarmclock.AlarmActivity">
 
     <Button
         android:text="Stop"

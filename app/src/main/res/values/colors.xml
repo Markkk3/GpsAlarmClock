@@ -1,8 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#3F51B5</color>
-    <color name="colorPrimaryDark">#303F9F</color>
+    <color name="colorPrimaryLight">#02dbb0</color>
+    <color name="colorPrimary">#07b09b</color>
+    <color name="colorPrimaryDark">#113e64</color>
     <color name="colorAccent">#FF4081</color>
-    <color name="colorOffAlarm">#9e9e9e</color>
-    <color name="colorOnAlarm">#b2ff59</color>
+    <color name="colorOffAlarm">#00ffffff</color>
+    <color name="colorOnAlarm">#2fffffff</color>
+    <color name="colortext">#f0f0f0</color>
+    <color name="colortextline">#03d7ae</color>
+    <color name="colorline">#2f03d7ae</color>
+    <color name="colorbutton">#136377</color>
+    <color name="white">#ffffff</color>
+    <color name="dialogButton">#00fae0</color>
 </resources>

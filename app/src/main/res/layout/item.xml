@@ -2,60 +2,70 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
+    android:background="#0000f4f4"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
-    <android.support.v7.widget.CardView
-        android:layout_width="match_parent"
-        android:layout_margin="5dp"
-        android:layout_height="60dp"
-        android:id="@+id/cardView"
-        app:cardCornerRadius="3dp">
 
-        <LinearLayout
+    <LinearLayout
             android:orientation="horizontal"
             android:layout_width="match_parent"
             android:gravity="center"
             android:id="@+id/lilayout"
-            android:background="#b8fbff"
-            android:layout_height="match_parent">
+            android:background="#0a8b89"
+            android:layout_height="80dp">
 
             <ImageView
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
-                android:layout_marginTop="10dp"
-                android:layout_marginBottom="10dp"
+                android:layout_marginTop="5dp"
+                android:layout_marginBottom="5dp"
                 android:layout_gravity="bottom"
-                android:src="@mipmap/ic_play_arrow_black_24dp"
-                android:id="@+id/imgstart"
-                android:layout_weight="0.5" />
+                android:layout_weight="2"
+                android:src="@mipmap/play"
+                android:id="@+id/imgstart" />
 
-            <TextView
-                android:text="Дом"
+            <LinearLayout
+                android:orientation="vertical"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:id="@+id/tvname"
-                android:textSize="18sp"
-                android:layout_weight="1" />
+                android:layout_weight="4"
+                android:layout_height="match_parent">
 
-            <TextView
-                android:text="Выберите точку"
-                android:textSize="20sp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:id="@+id/tvkm"
-                android:layout_weight="1" />
+                <TextView
+                    android:text="Дом"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/colortext"
+                    android:gravity="center_vertical"
+                    android:id="@+id/tvname"
+                    android:textSize="20sp"
+                    android:layout_weight="1" />
+
+                <TextView
+                    android:text="Выберите точку"
+                    android:textSize="14sp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/colortext"
+                    android:id="@+id/tvkm"
+                    android:layout_weight="1" />
+
+            </LinearLayout>
 
             <ImageView
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
-                android:layout_marginTop="10dp"
-                android:layout_marginBottom="10dp"
-                android:src="@mipmap/ic_clear_black_24dp"
+                android:src="@mipmap/close"
                 android:id="@+id/imgdelete"
-                android:layout_weight="0.5"/>
+                android:layout_weight="0.1"/>
         </LinearLayout>
 
-    </android.support.v7.widget.CardView>
+    <LinearLayout
+        android:orientation="vertical"
+        android:background="@color/colorline"
+        android:layout_width="match_parent"
+        android:layout_height="1dp">
+    </LinearLayout>
+
 
 </LinearLayout>

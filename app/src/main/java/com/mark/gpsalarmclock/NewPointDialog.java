@@ -15,17 +15,49 @@ import com.mark.qpsalarmclock.R;
 public class NewPointDialog extends DialogFragment implements DialogInterface.OnClickListener {
     private View form=null;
     MainActivity main;
+    private AlertDialog dialog;
+
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
 
         form= getActivity().getLayoutInflater()
                 .inflate(R.layout.newpoint_dialog, null);
         AlertDialog.Builder builder=new AlertDialog.Builder(getActivity());
-        return(builder.setView(form).setTitle("Введите имя точки")
+
+
+        View view = getActivity().getLayoutInflater().inflate(R.layout.title, null);
+        dialog = (builder.setView(form)
+
+                .setTitle("Введите имя точки")
+                .setCustomTitle(view)
                 .setPositiveButton(android.R.string.ok, this)
                 .setNegativeButton(android.R.string.cancel, null).create());
 
+
+        dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        dialog.setOnShowListener( new DialogInterface.OnShowListener() {
+                                      @Override
+                                      public void onShow(DialogInterface dialogInterface) {
+                                          dialog.getButton(dialog.BUTTON_NEGATIVE).setTextColor(getResources().getColor(R.color.dialogButton));
+                                             dialog.getButton(dialog.BUTTON_POSITIVE).setTextColor(getResources().getColor(R.color.dialogButton));
+                                      }
+                                  });
+/*
+        int textViewId = dialog.getContext().getResources().getIdentifier("android:id/alertTitle", null, null);
+        TextView tv = (TextView) dialog.findViewById(textViewId);
+        tv.setTextColor(getResources().getColor(R.color.white));
+        */
+        return dialog;
+
     }
+    /*
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    public void onShow(DialogInterface arg0) {
+    //    dialog.getButton(dialog.BUTTON_NEGATIVE).setTextColor(getContext().getResources().getColor(R.color.white));
+     //   dialog.getButton(dialog.BUTTON_POSITIVE).setTextColor(getContext().getResources().getColor(R.color.white));
+        //dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(R.color.colorPrimary);
+    }
+*/
 
     public static interface OnCompleteListener {
         public abstract void onComplete(String name);

@@ -1,7 +1,5 @@
 package com.mark.gpsalarmclock;
 
-import android.content.res.Resources;
-import android.graphics.Color;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -49,10 +47,10 @@ public class RvAdapter extends RecyclerView.Adapter<RvAdapter.ViewHolder> {
 
         if(objects.get(position).getRun()) {
             holder.linlayout.setBackgroundColor(main.getResources().getColor(R.color.colorOnAlarm));
-            holder.imgstart.setImageResource(R.mipmap.ic_stop_black_24dp);
+            holder.imgstart.setImageResource(R.mipmap.pause);
         } else  {
             holder.linlayout.setBackgroundColor(main.getResources().getColor(R.color.colorOffAlarm));
-            holder.imgstart.setImageResource(R.mipmap.ic_play_arrow_black_24dp);
+            holder.imgstart.setImageResource(R.mipmap.play);
         }
 
 
@@ -109,7 +107,7 @@ public class RvAdapter extends RecyclerView.Adapter<RvAdapter.ViewHolder> {
                       //  main.runAlarm(objects.get(getAdapterPosition()).getId(), getAdapterPosition());
                         objects.get(getAdapterPosition()).setRun(true);
                        // main.drawLine(getAdapterPosition());
-                        imgstart.setImageResource(R.mipmap.ic_stop_black_24dp);
+                        imgstart.setImageResource(R.mipmap.pause);
 
                     }
                     else {
@@ -118,7 +116,7 @@ public class RvAdapter extends RecyclerView.Adapter<RvAdapter.ViewHolder> {
                         objects.get(getAdapterPosition()).setRun(false);
                       //  main.getMyService().notificationCancel();
 
-                        imgstart.setImageResource(R.mipmap.ic_play_arrow_black_24dp);
+                        imgstart.setImageResource(R.mipmap.play);
                     }
                     main.drawLine(true);
 
