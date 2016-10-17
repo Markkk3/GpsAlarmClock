@@ -9,16 +9,20 @@ import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.Ringtone;
 import android.net.Uri;
+import android.os.Bundle;
 import android.os.Vibrator;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
+import android.view.animation.LinearInterpolator;
 import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
-
 
 import com.mark.qpsalarmclock.R;
 
@@ -26,7 +30,8 @@ import java.util.concurrent.TimeUnit;
 
 public class AlarmActivity extends AppCompatActivity implements View.OnClickListener {
 
-    Button btnstop;
+       Button btnexit;
+    Button btnmenu;
     final String LOG_TAG = "myLogs";
     private SharedPreferences sp;
     private boolean vibro;
@@ -39,6 +44,10 @@ public class AlarmActivity extends AppCompatActivity implements View.OnClickList
     MyApplication myApplication;
     int itemnum = -1;
     private  boolean isStart;
+    String name="";
+    TextView tvName;
+    ImageView imgStop;
+    Animation animation;
 
 
     @Override
@@ -55,14 +64,54 @@ public class AlarmActivity extends AppCompatActivity implements View.OnClickList
          id = getIntent().getIntExtra("ID", 0);
         Log.d(LOG_TAG, "AlarmActivity onCreate " +  id);
         itemnum = getIntent().getIntExtra("pos", -1);
+        name = getIntent().getStringExtra("NAME");
+
 
         myApplication =(MyApplication) getApplicationContext();
         Log.d(LOG_TAG, "AlarmActivity size" +   myApplication.alarmItem.size());
 
 
 
-        btnstop = (Button) findViewById(R.id.btnstop);
-        btnstop.setOnClickListener(this);
+        imgStop = (ImageView) findViewById(R.id.imageViewStop);
+
+        animation = new AlphaAnimation(1, 0.2f); // Change alpha from fully visible to invisible
+        animation.setDuration(800); // duration - half a second
+        animation.setInterpolator(new LinearInterpolator()); // do not alter animation rate
+        animation.setRepeatCount(Animation.INFINITE); // Repeat animation infinitely
+        animation.setRepeatMode(Animation.REVERSE); // Reverse animation at the end so the button will fade back in
+        imgStop.startAnimation(animation);
+        imgStop.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(final View view) {
+                view.clearAnimation();
+                Log.d(LOG_TAG, "AlarmActivity bntstop" );
+                isStart = false;
+
+                saveRun();
+                if(mediaPlayer!= null) {
+                    mediaPlayer.stop();
+                    mediaPlayer.release();
+                }
+                mediaPlayer = null;
+
+            }
+        });
+        /*
+        imgStop.setBackgroundResource(R.drawable.button_stop123);
+
+        //Загружаем объект анимации:
+        animation = (AnimationDrawable)imgStop.getBackground();
+
+        //Выставляя значение false, добиваемся бесконечного
+        //повторения анимации (true - только 1 повторение):
+        animation.setOneShot(false);
+*/
+        tvName = (TextView) findViewById(R.id.textViewName);
+        tvName.setText("" + name);
+        btnmenu = (Button) findViewById(R.id.btnmenu);
+        btnexit = (Button) findViewById(R.id.btnexit);
+        btnmenu.setOnClickListener(this);
+        btnexit.setOnClickListener(this);
         sp = PreferenceManager.getDefaultSharedPreferences(this);
 
         String radius = sp.getString(getResources().getString(R.string.radius), "100");
@@ -163,7 +212,7 @@ public class AlarmActivity extends AppCompatActivity implements View.OnClickList
         if(!isStart) {
             super.onBackPressed();
 
-            startActivity(new Intent(this, MainActivity.class));
+            startActivity(new Intent(this, MainActivity.class).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP));
         }
         else  {
             Toast.makeText(this, "Нажмите стоп", Toast.LENGTH_SHORT).show();
@@ -174,7 +223,8 @@ public class AlarmActivity extends AppCompatActivity implements View.OnClickList
     @Override
     public void onClick(View view) {
         switch (view.getId()) {
-            case R.id.btnstop:
+            case R.id.imageViewStop:
+                //animation.stop();
                 Log.d(LOG_TAG, "AlarmActivity bntstop" );
                 isStart = false;
 
@@ -185,6 +235,13 @@ public class AlarmActivity extends AppCompatActivity implements View.OnClickList
                 }
                 mediaPlayer = null;
                 break;
+
+            case R.id.btnexit:
+                finish();
+            break;
+            case R.id.btnmenu:
+                startActivity(new Intent(this, MainActivity.class).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP));
+            break;
         }
 
     }

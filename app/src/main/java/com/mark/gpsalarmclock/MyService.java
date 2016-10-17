@@ -7,13 +7,11 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.content.res.Configuration;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Binder;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.IBinder;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -56,6 +54,7 @@ public class MyService extends Service implements LocationListener, GoogleApiCli
     private boolean stopself = false;
     public boolean runalarm = false;
     private boolean signalLost = false; // если сигнал потерян
+    private boolean onealarmplay = false; // хотя бы один будильник запущен
     private MyApplication myApplication;
  //   private Handler handler1;
     private Runnable runnableUpdateAdapter1;
@@ -101,7 +100,8 @@ public class MyService extends Service implements LocationListener, GoogleApiCli
                     new Runnable() { // описываем объект Runnable в конструкторе
                         public void run() {
                             while (!Thread.currentThread().isInterrupted()) {
-                                Log.d(LOG_TAG, "поток работает");
+                                Log.d(LOG_TAG, "поток работает" + Thread.currentThread().isInterrupted());
+                                Log.d(LOG_TAG, "поток работает" + MyApplication.myThread.currentThread().isInterrupted());
                                 if (ActivityCompat.checkSelfPermission(MyService.this, Manifest.permission.ACCESS_FINE_LOCATION) !=
                                         PackageManager.PERMISSION_GRANTED &&
                                         ActivityCompat.checkSelfPermission(MyService.this, Manifest.permission.ACCESS_COARSE_LOCATION) !=
@@ -117,6 +117,16 @@ public class MyService extends Service implements LocationListener, GoogleApiCli
                                     } else {
                                         signalLost = false;
                                     }
+                                }
+                                Log.d(LOG_TAG, "останавлив " + stopself + " " +  onealarmplay);
+                                if (stopself  &&!onealarmplay) {
+                                    Log.d(LOG_TAG, "делаем stopself() " );
+                                    if (notificationManager != null) {
+                                        notificationManager.cancel(101);
+                                        runalarm = false;
+                                    }
+//            handler1.removeCallbacks(runnableUpdateAdapter1);
+                                    stopSelf();
                                 }
 
                                 try {
@@ -280,9 +290,12 @@ public class MyService extends Service implements LocationListener, GoogleApiCli
         super.onDestroy();
         Log.d(LOG_TAG, "MyS onDestroy");
 
+        Log.d(LOG_TAG, "OnD" + Thread.currentThread().isInterrupted());
 
 
         MyApplication.myThread.interrupt();
+        Log.d(LOG_TAG, "OnD" + Thread.currentThread().isInterrupted());
+       // MyApplication.myThread.stop();
         //handler1.removeCallbacks(runnableUpdateAdapter1);
         stopLocationUpdates();
 
@@ -329,7 +342,8 @@ public class MyService extends Service implements LocationListener, GoogleApiCli
     public void onLocationChanged(Location location) {
         Log.d(LOG_TAG, "MyS onLocationChanged");
 
-        boolean notifyVisible = false;
+        notifyVisible = false;
+        onealarmplay = false;
         float  mindistance = 0;
       //  Intent intent = new Intent().putExtra(MainActivity.MY_LOCATION, location).putExtra(MainActivity.PARAM_RESULT, 1);
 
@@ -387,6 +401,7 @@ public class MyService extends Service implements LocationListener, GoogleApiCli
 
             if(MyApplication.alarmItem.get(i).getRun()) {
               notifyVisible = true;
+                onealarmplay = true;
                 stopself = false;
                 Log.d(LOG_TAG, "MyS notifyVisible = true: " + res[0]);
                 if(mindistance == 0) {
@@ -406,8 +421,13 @@ public class MyService extends Service implements LocationListener, GoogleApiCli
 
 
         // останавливаем поток
-        if (stopself && !notifyVisible) {
+        Log.d(LOG_TAG, "останавлив " + stopself + " " +  onealarmplay);
+        if (stopself  &&!onealarmplay) {
             Log.d(LOG_TAG, "делаем stopself() " );
+            if (notificationManager != null) {
+                notificationManager.cancel(101);
+                runalarm = false;
+            }
 //            handler1.removeCallbacks(runnableUpdateAdapter1);
             stopSelf();
         }
@@ -466,7 +486,7 @@ public class MyService extends Service implements LocationListener, GoogleApiCli
             Log.d(LOG_TAG, "MyS  runAlarm() 4" );
 
             Intent intent2 = new Intent(MyService.this, AlarmActivity.class);
-            intent2.putExtra("ID", gifItem.getId()).putExtra("pos", i);
+            intent2.putExtra("ID", gifItem.getId()).putExtra("pos", i).putExtra("NAME", gifItem.getName());
             PendingIntent pendingIntent2 = PendingIntent.getActivity(getApplicationContext(), 0, intent2, PendingIntent.FLAG_ONE_SHOT);
             ((AlarmManager) getSystemService(ALARM_SERVICE)).set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 4 * 1000, pendingIntent2);
         }

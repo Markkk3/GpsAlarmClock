@@ -58,7 +58,6 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
-import com.google.android.gms.maps.model.PolylineOptions;
 import com.mark.qpsalarmclock.R;
 
 import java.util.ArrayList;
@@ -209,7 +208,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         RecyclerView.ItemAnimator itemAnimator = new DefaultItemAnimator();
         rv.setItemAnimator(itemAnimator);
-        rv.setOnScrollChangeListener(new View.OnScrollChangeListener() {
+/*        rv.setOnScrollChangeListener(new View.OnScrollChangeListener() {
             @Override
             public void onScrollChange(View view, int i, int i1, int i2, int i3) {
 
@@ -222,7 +221,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 //child -> Floating Action Button
             }
         });
-
+*/
 /*
         if (mGoogleApiClient == null) {
             // ATTENTION: This "addApi(AppIndex.API)"was auto-generated to implement the App Indexing API.
@@ -435,21 +434,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     private void animationMap() {
 
-       // ViewGroup sceneRoot = (ViewGroup) findViewById(R.id.content_main);
-     //   ViewGroup sceneRoot = (ViewGroup) findViewById(R.id.container);
-     //     View cardview =  sceneRoot.findViewById(R.id.cardView);
 
-      //  ViewGroup.LayoutParams params1 = sceneRoot.getLayoutParams();
-
-        //  params.width = newSquareSize;
-        //  params.height = RecyclerView.LayoutParams.MATCH_PARENT;
-       //ViewGroup sceneRoot = (ViewGroup) findViewById(R.id.linlayoutConteiner);
-      //  ViewGroup.LayoutParams params1 = sceneRoot.getLayoutParams();
-       // Log.d(LOG_TAG, "высота экроана0 =" + sceneRoot.getLayoutParams().height);
-      //  heightScreen = params1.height;
-      //  Log.d(LOG_TAG, "высота экроана2 =" + heightScreen);
-     //   params = cardview.getLayoutParams();
-        //LinearLayout.LayoutParams l = (LinearLayout.LayoutParams) cardview.getLayoutParams();
         paramsLinear = (LinearLayout.LayoutParams) cardview.getLayoutParams();
         Log.d(LOG_TAG, "высота экроана2 " + paramsLinear.weight);
        // heightMap= params.height;
@@ -784,7 +769,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     marker = new MarkerOptions()
                             .position(latLng)
                             .title(currentNamePoint)
-                            .icon(BitmapDescriptorFactory.fromResource(R.mipmap.map_marker1));
+                            .icon(BitmapDescriptorFactory.fromResource(R.mipmap.map_marker2));
                     mMap.addMarker(marker);
                     newPoint(currentNamePoint, latLng.latitude, latLng.longitude);
                     choisePoint = false;
@@ -853,7 +838,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         for(int j = 0; j < MyApplication.alarmItem.size(); j++) {
 
             if (MyApplication.alarmItem.get(j).getRun()) {
-
+/*
                 PolylineOptions rectOptions = new PolylineOptions()
                         .add(new LatLng(MyApplication.alarmItem.get(j).getlatitude(), MyApplication.alarmItem.get(j).getLongitude()))
                         .add(new LatLng(MyApplication.lat, MyApplication.lng))
@@ -864,7 +849,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                  if(polylineArrayList != null && mMap != null)   polylineArrayList.add(mMap.addPolyline(rectOptions));
 
-
+*/
                 // String radius = sp.getString(getResources().getString(R.string.radius), "100");
                 int radius = Integer.parseInt(sp.getString(getResources().getString(R.string.radius), "100"));
 
@@ -872,7 +857,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     CircleOptions circleOptions = new CircleOptions()
                             .center(new LatLng(MyApplication.alarmItem.get(j).getlatitude(), MyApplication.alarmItem.get(j).getLongitude()))
                             .radius(radius)
-                            .fillColor(Color.argb(40, 255, 0, 0))
+                            .fillColor(Color.argb(102, 57, 202, 232))
                             .strokeWidth(1)
                             .strokeColor(Color.argb(0, 0, 0, 0));
 
@@ -918,7 +903,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             LatLng latLng = new LatLng(MyApplication.alarmItem.get(i).getlatitude(), MyApplication.alarmItem.get(i).getLongitude());
             marker = new MarkerOptions().position(latLng)
                     .title(MyApplication.alarmItem.get(i).getName())
-                    .icon(BitmapDescriptorFactory.fromResource(R.mipmap.map_marker1));
+                    .icon(BitmapDescriptorFactory.fromResource(R.mipmap.map_marker2));
             mMap.addMarker(marker);
         }
     }
