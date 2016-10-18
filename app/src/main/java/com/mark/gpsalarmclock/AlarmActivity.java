@@ -16,9 +16,9 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
+import android.view.animation.AccelerateInterpolator;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
-import android.view.animation.LinearInterpolator;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -74,9 +74,9 @@ public class AlarmActivity extends AppCompatActivity implements View.OnClickList
 
         imgStop = (ImageView) findViewById(R.id.imageViewStop);
 
-        animation = new AlphaAnimation(1, 0.2f); // Change alpha from fully visible to invisible
-        animation.setDuration(800); // duration - half a second
-        animation.setInterpolator(new LinearInterpolator()); // do not alter animation rate
+        animation = new AlphaAnimation(1, 0.4f); // Change alpha from fully visible to invisible
+        animation.setDuration(500); // duration - half a second
+        animation.setInterpolator(new AccelerateInterpolator()); // do not alter animation rate
         animation.setRepeatCount(Animation.INFINITE); // Repeat animation infinitely
         animation.setRepeatMode(Animation.REVERSE); // Reverse animation at the end so the button will fade back in
         imgStop.startAnimation(animation);
@@ -182,7 +182,7 @@ public class AlarmActivity extends AppCompatActivity implements View.OnClickList
                             mediaPlayer.setVolume(volume, volume);
 
                             if(vibro) {
-                                long mills = 200L;
+                                long mills = 500;
                                 Vibrator vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
                                 vibrator.vibrate(mills);
                             }
@@ -237,10 +237,19 @@ public class AlarmActivity extends AppCompatActivity implements View.OnClickList
                 break;
 
             case R.id.btnexit:
-                finish();
+                if(!isStart) {
+                    finish();
+                } else {
+                    Toast.makeText(this, "Нажмите стоп", Toast.LENGTH_SHORT).show();
+                }
             break;
             case R.id.btnmenu:
-                startActivity(new Intent(this, MainActivity.class).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP));
+                if(!isStart) {
+                    startActivity(new Intent(this, MainActivity.class).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP));
+                }
+                else {
+                    Toast.makeText(this, "Нажмите стоп", Toast.LENGTH_SHORT).show();
+                }
             break;
         }
 

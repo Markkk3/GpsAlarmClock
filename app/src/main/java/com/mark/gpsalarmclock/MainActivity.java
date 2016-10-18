@@ -175,7 +175,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             }
         });
-        fab.setVisibility(View.GONE);
+   //     fab.setVisibility(View.GONE);
         btnadd = (Button) findViewById(R.id.btnadd);
         btnadd.setOnClickListener(new View.OnClickListener() {
             @Override

@@ -13,15 +13,14 @@
             android:gravity="center"
             android:id="@+id/lilayout"
             android:background="#0a8b89"
-            android:layout_height="80dp">
+            android:layout_height="70dp">
 
             <ImageView
-                android:layout_width="wrap_content"
+                android:layout_width="80dp"
                 android:layout_height="match_parent"
                 android:layout_marginTop="5dp"
                 android:layout_marginBottom="5dp"
                 android:layout_gravity="bottom"
-                android:layout_weight="2"
                 android:src="@mipmap/play"
                 android:id="@+id/imgstart" />
 
@@ -53,11 +52,10 @@
             </LinearLayout>
 
             <ImageView
-                android:layout_width="wrap_content"
+                android:layout_width="40dp"
                 android:layout_height="match_parent"
                 android:src="@mipmap/close"
-                android:id="@+id/imgdelete"
-                android:layout_weight="0.1"/>
+                android:id="@+id/imgdelete"/>
         </LinearLayout>
 
     <LinearLayout
