@@ -5,6 +5,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.drawable.Animatable;
+import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.Ringtone;
@@ -16,9 +18,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
-import android.view.animation.AccelerateInterpolator;
-import android.view.animation.AlphaAnimation;
-import android.view.animation.Animation;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -47,7 +46,7 @@ public class AlarmActivity extends AppCompatActivity implements View.OnClickList
     String name="";
     TextView tvName;
     ImageView imgStop;
-    Animation animation;
+  //  Animation animation;
 
 
     @Override
@@ -71,15 +70,22 @@ public class AlarmActivity extends AppCompatActivity implements View.OnClickList
         Log.d(LOG_TAG, "AlarmActivity size" +   myApplication.alarmItem.size());
 
 
-
+   //     AnimationDrawable drawable1 = getResources().getAnimation(R.drawable.anim_stop);
         imgStop = (ImageView) findViewById(R.id.imageViewStop);
+     //   imgStop.setImageDrawable(drawable1);
 
+        Drawable drawable = imgStop.getDrawable();
+        if (drawable instanceof Animatable){
+            ((Animatable) drawable).start();
+        }
+/*
         animation = new AlphaAnimation(1, 0.4f); // Change alpha from fully visible to invisible
         animation.setDuration(500); // duration - half a second
         animation.setInterpolator(new AccelerateInterpolator()); // do not alter animation rate
         animation.setRepeatCount(Animation.INFINITE); // Repeat animation infinitely
         animation.setRepeatMode(Animation.REVERSE); // Reverse animation at the end so the button will fade back in
         imgStop.startAnimation(animation);
+        */
         imgStop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(final View view) {

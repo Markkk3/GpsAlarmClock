@@ -16,7 +16,7 @@
         android:layout_width="150dp"
         android:layout_height="150dp"
         android:layout_gravity="center"
-        android:background="@drawable/stop25"
+        android:background="@drawable/stop2"
         android:id="@+id/imageViewStop"
         android:layout_above="@+id/textViewName"
         android:layout_centerHorizontal="true" />

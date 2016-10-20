@@ -6,6 +6,7 @@
     <TextView
         android:text="Введите  название будильникка"
         android:textSize="22sp"
+        android:gravity="center"
         android:layout_width="match_parent"
         android:textColor="@color/white"
         android:layout_height="wrap_content"
