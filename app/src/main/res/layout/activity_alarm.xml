@@ -12,15 +12,6 @@
     android:background="@drawable/backgroundgradient"
     tools:context="com.mark.gpsalarmclock.AlarmActivity">
 
-    <ImageView
-        android:layout_width="150dp"
-        android:layout_height="150dp"
-        android:layout_gravity="center"
-        android:background="@drawable/stop2"
-        android:id="@+id/imageViewStop"
-        android:layout_above="@+id/textViewName"
-        android:layout_centerHorizontal="true" />
-
     <TextView
         android:text="Finish"
         android:layout_width="wrap_content"
@@ -36,11 +27,13 @@
         android:layout_height="wrap_content"
         android:paddingRight="10dp"
         android:paddingLeft="10dp"
+
+        android:gravity="center"
         android:layout_below="@+id/textViewName"
         android:layout_marginTop="50dp">
 
         <Button
-            android:text="Выход"
+            android:text="Назад"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:gravity="center"
@@ -48,25 +41,20 @@
             android:id="@+id/btnexit"
             android:textSize="12sp"
             android:textColor="@color/colortext"
-            android:background="@drawable/oval"
-            android:layout_weight="1" />
+            android:background="@drawable/oval" />
 
-        <Space
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1" />
-
-        <Button
-            android:text="Меню"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:layout_gravity="center|bottom"
-            android:id="@+id/btnmenu"
-            android:textSize="12sp"
-            android:textColor="@color/colortext"
-            android:background="@drawable/oval"
-            android:layout_weight="1" />
     </LinearLayout>
+
+    <ImageView
+        android:layout_width="160dp"
+        android:layout_height="160dp"
+        android:layout_gravity="center"
+        android:padding="17dp"
+        android:id="@+id/imageViewStop"
+        app:srcCompat="@drawable/anim_stop"
+        tools:ignore="MissingPrefix"
+        android:layout_above="@+id/textViewName"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="40dp" />
 
 </RelativeLayout>

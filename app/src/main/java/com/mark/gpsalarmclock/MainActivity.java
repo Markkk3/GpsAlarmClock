@@ -240,8 +240,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
       //  bindService(new Intent(this, MyService.class).putExtra(PARAM_PINTENT, pi).putExtra(MODE_SERVICE, MODE_MY_LOCATION));
         readDatabase();
-
-
+/*
+        Intent intent2 = new Intent(this, AlarmActivity.class);
+        intent2.putExtra("ID", MyApplication.alarmItem.get(1).getId()).putExtra("pos", 1).putExtra("NAME",  MyApplication.alarmItem.get(1).getName());
+        startActivity(intent2);*/
         startService(new Intent(this, MyService.class));
 
         if(!getdistanceStart) getDistance();
@@ -772,6 +774,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                             .icon(BitmapDescriptorFactory.fromResource(R.mipmap.map_marker2));
                     mMap.addMarker(marker);
                     newPoint(currentNamePoint, latLng.latitude, latLng.longitude);
+                    Log.d(LOG_TAG, "кликнули на карту=" + latLng.latitude + " long=" + latLng.longitude);
                     choisePoint = false;
                   //  lParams.height = heightMap;
 

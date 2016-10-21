@@ -1,16 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
-<animated-vector
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:ignore="NewApi"
-    android:drawable="@drawable/stop2">
+    android:drawable="@drawable/ic_stop"
+    tools:ignore="NewApi">
 
     <target
-        android:animation="@animator/blink_left"
-        android:name="blink_left" />
+        android:name="white"
+        android:animation="@animator/alpha" />
     <target
-        android:animation="@animator/blink_left"
-        android:name="blink_right" />
+        android:name="circle"
+        android:animation="@animator/zoom_y" />
+    <target
+        android:name="circle"
+        android:animation="@animator/zoom_x" />
 
+    <target
+        android:name="pause"
+        android:animation="@animator/scale" />
+    <!--
+           <target
+               android:animation="@animator/zoom_x"
+           android:name="pause" />
 
+           <target
+               android:animation="@animator/scale"
+               android:name="pause1" />
+
+           <target
+               android:animation="@animator/scale"
+               android:name="pause2" />
+           <target
+               android:animation="@animator/translation_up"
+               android:name="pause1" />
+           <target
+               android:animation="@animator/translation_down"
+               android:name="pause2" />
+       -->
 </animated-vector>

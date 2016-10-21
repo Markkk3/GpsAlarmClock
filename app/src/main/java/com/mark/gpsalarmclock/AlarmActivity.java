@@ -2,7 +2,6 @@ package com.mark.gpsalarmclock;
 
 import android.content.ContentValues;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.drawable.Animatable;
@@ -30,7 +29,7 @@ import java.util.concurrent.TimeUnit;
 public class AlarmActivity extends AppCompatActivity implements View.OnClickListener {
 
        Button btnexit;
-    Button btnmenu;
+  //  Button btnmenu;
     final String LOG_TAG = "myLogs";
     private SharedPreferences sp;
     private boolean vibro;
@@ -46,6 +45,7 @@ public class AlarmActivity extends AppCompatActivity implements View.OnClickList
     String name="";
     TextView tvName;
     ImageView imgStop;
+   // View imgStop;
   //  Animation animation;
 
 
@@ -72,8 +72,10 @@ public class AlarmActivity extends AppCompatActivity implements View.OnClickList
 
    //     AnimationDrawable drawable1 = getResources().getAnimation(R.drawable.anim_stop);
         imgStop = (ImageView) findViewById(R.id.imageViewStop);
+      //  imgStop = (View) findViewById(R.id.imageViewStop);
      //   imgStop.setImageDrawable(drawable1);
-
+      //  ((Animatable) imgStop.getBackground()).start();
+       // ((Animatable) imgStop.getDrawable()).start();
         Drawable drawable = imgStop.getDrawable();
         if (drawable instanceof Animatable){
             ((Animatable) drawable).start();
@@ -90,6 +92,11 @@ public class AlarmActivity extends AppCompatActivity implements View.OnClickList
             @Override
             public void onClick(final View view) {
                 view.clearAnimation();
+
+                Drawable drawable = imgStop.getDrawable();
+                if (drawable instanceof Animatable){
+                    ((Animatable) drawable).stop();
+                }
                 Log.d(LOG_TAG, "AlarmActivity bntstop" );
                 isStart = false;
 
@@ -114,9 +121,9 @@ public class AlarmActivity extends AppCompatActivity implements View.OnClickList
 */
         tvName = (TextView) findViewById(R.id.textViewName);
         tvName.setText("" + name);
-        btnmenu = (Button) findViewById(R.id.btnmenu);
+      //  btnmenu = (Button) findViewById(R.id.btnmenu);
         btnexit = (Button) findViewById(R.id.btnexit);
-        btnmenu.setOnClickListener(this);
+       // btnmenu.setOnClickListener(this);
         btnexit.setOnClickListener(this);
         sp = PreferenceManager.getDefaultSharedPreferences(this);
 
@@ -188,7 +195,7 @@ public class AlarmActivity extends AppCompatActivity implements View.OnClickList
                             mediaPlayer.setVolume(volume, volume);
 
                             if(vibro) {
-                                long mills = 500;
+                                long mills = 400;
                                 Vibrator vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
                                 vibrator.vibrate(mills);
                             }
@@ -198,7 +205,7 @@ public class AlarmActivity extends AppCompatActivity implements View.OnClickList
 
                         Log.d(LOG_TAG, "увеличение громкости = " + volume);
                         try {
-                            TimeUnit.SECONDS.sleep(1);
+                            TimeUnit.MILLISECONDS.sleep(1000);
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
@@ -217,8 +224,9 @@ public class AlarmActivity extends AppCompatActivity implements View.OnClickList
     public void onBackPressed() {
         if(!isStart) {
             super.onBackPressed();
+            finish();
 
-            startActivity(new Intent(this, MainActivity.class).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP));
+         //   startActivity(new Intent(this, MainActivity.class).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP));
         }
         else  {
             Toast.makeText(this, "Нажмите стоп", Toast.LENGTH_SHORT).show();
@@ -246,14 +254,6 @@ public class AlarmActivity extends AppCompatActivity implements View.OnClickList
                 if(!isStart) {
                     finish();
                 } else {
-                    Toast.makeText(this, "Нажмите стоп", Toast.LENGTH_SHORT).show();
-                }
-            break;
-            case R.id.btnmenu:
-                if(!isStart) {
-                    startActivity(new Intent(this, MainActivity.class).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP));
-                }
-                else {
                     Toast.makeText(this, "Нажмите стоп", Toast.LENGTH_SHORT).show();
                 }
             break;

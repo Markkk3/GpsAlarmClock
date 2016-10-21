@@ -7,14 +7,19 @@
     better:viewportHeight="100"
     better:viewportWidth="100">
 
+    <group android:name="main" android:pivotX="50" android:pivotY="50">
     <path
         android:fillAlpha="1"
+
         android:fillColor="#00d4af"
         android:pathData="M50,50m-50,0a50,50 0,1 1,100 0a50,50 0,1 1,-100 0"
         better:fillColor="#00d4af"
         better:pathData="M50,50m-50,0a50,50 0,1 1,100 0a50,50 0,1 1,-100 0" />
+    </group>
+
+    <group android:name="head" >
+
     <path
-        android:name="blink_left"
         android:fillAlpha="1"
         android:fillColor="#ffffff"
         android:pathData="M36,18h8v64h-8z"
@@ -22,10 +27,10 @@
         better:pathData="M36,18h8v64h-8z" />
 
     <path
-        android:name="blink_right"
         android:fillAlpha="1"
         android:fillColor="#ffffff"
         android:pathData="M56,18h8v64h-8z"
         better:fillColor="#ffffff"
         better:pathData="M56,18h8v64h-8z" />
+    </group>
 </vector>
