@@ -47,10 +47,12 @@ public class RvAdapter extends RecyclerView.Adapter<RvAdapter.ViewHolder> {
 
         if(objects.get(position).getRun()) {
             holder.linlayout.setBackgroundColor(main.getResources().getColor(R.color.colorOnAlarm));
-            holder.imgstart.setImageResource(R.mipmap.pause);
+            holder.imgstart.setImageDrawable(main.getResources().getDrawable(R.drawable.stop2));
+            //ImageResource(R.mipmap.pause);
         } else  {
             holder.linlayout.setBackgroundColor(main.getResources().getColor(R.color.colorOffAlarm));
-            holder.imgstart.setImageResource(R.mipmap.play);
+           // holder.imgstart.setImageResource(R.mipmap.play);
+            holder.imgstart.setImageDrawable(main.getResources().getDrawable(R.drawable.play1));
         }
 
 
@@ -107,7 +109,8 @@ public class RvAdapter extends RecyclerView.Adapter<RvAdapter.ViewHolder> {
                       //  main.runAlarm(objects.get(getAdapterPosition()).getId(), getAdapterPosition());
                         objects.get(getAdapterPosition()).setRun(true);
                        // main.drawLine(getAdapterPosition());
-                        imgstart.setImageResource(R.mipmap.pause);
+                        imgstart.setImageDrawable(main.getResources().getDrawable(R.drawable.stop2));
+                      //  imgstart.setImageResource(R.mipmap.pause);
 
                     }
                     else {
@@ -115,8 +118,8 @@ public class RvAdapter extends RecyclerView.Adapter<RvAdapter.ViewHolder> {
                         main.saveRun(0, objects.get(getAdapterPosition()).getId());
                         objects.get(getAdapterPosition()).setRun(false);
                       //  main.getMyService().notificationCancel();
-
-                        imgstart.setImageResource(R.mipmap.play);
+                        imgstart.setImageDrawable(main.getResources().getDrawable(R.drawable.play1));
+                   //     imgstart.setImageResource(R.mipmap.play);
                     }
                     main.drawLine(true);
 

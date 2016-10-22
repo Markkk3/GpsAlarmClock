@@ -16,6 +16,7 @@
         android:shadowColor="@color/white"
         android:textColorHint="#54e0e0e0"
         android:textColorHighlight="@color/white"
+
         android:textCursorDrawable="@null"
         android:layout_marginTop="15dp"
         android:hint="Name point"

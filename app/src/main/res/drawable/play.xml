@@ -1,0 +1,36 @@
+<vector
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:better="http://schemas.android.com/apk/res-auto"
+    android:height="24dp"
+    android:width="24dp"
+    android:viewportHeight="100.0"
+    android:viewportWidth="100.0"
+    better:viewportHeight="100"
+    better:viewportWidth="100">
+
+
+    <path
+        android:fillAlpha="1"
+        android:fillColor="#00000000"
+        better:fillColor="#00000000"
+        android:pathData="M50,50m-48.72,0a48.72,48.72 0,1 1,97.44 0a48.72,48.72 0,1 1,-97.44 0"
+        better:pathData="M50,50m-48.72,0a48.72,48.72 0,1 1,97.44 0a48.72,48.72 0,1 1,-97.44 0"
+        android:strokeAlpha="1"
+        android:strokeColor="#ffffff"
+        better:strokeColor="#ffffff"
+        android:strokeWidth="3"
+        better:strokeWidth="3"
+        android:strokeLineCap="butt"
+        android:strokeLineJoin="miter"/>
+    <path
+        android:fillAlpha="1"
+        android:fillColor="#ffffff"
+        better:fillColor="#ffffff"
+        android:pathData="m88,50 l-56,32 0,-64z"
+        better:pathData="m88,50 l-56,32 0,-64z"
+        android:strokeAlpha="1"
+        android:strokeColor="#00000000"
+        better:strokeColor="#00000000"
+        android:strokeWidth="4"
+        better:strokeWidth="4"/>
+</vector>

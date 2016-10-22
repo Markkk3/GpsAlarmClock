@@ -2,6 +2,9 @@ package com.mark.gpsalarmclock;
 
 import android.app.Application;
 
+import com.bettervectordrawable.VectorDrawableCompat;
+import com.mark.qpsalarmclock.R;
+
 import java.util.ArrayList;
 
 
@@ -20,9 +23,14 @@ public class MyApplication extends Application {
 
     public final void onCreate() {
         super.onCreate();
+        int[] ids = VectorDrawableCompat.findAllVectorResourceIdsSlow(getResources(), R.drawable.class);
+        VectorDrawableCompat.enableResourceInterceptionFor(getResources(), ids);
+
         singleton = this;
 
         alarmItem = new ArrayList<GifItem>();
+
+
     }
 
 
