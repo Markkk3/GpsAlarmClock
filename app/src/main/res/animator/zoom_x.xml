@@ -6,7 +6,7 @@
         android:repeatCount="infinite"
         android:repeatMode="reverse"
         android:valueFrom="1"
-        android:valueTo="1.15"
+        android:valueTo="1.10"
         android:valueType="floatType" />
 
 </set>
